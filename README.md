@@ -1,3 +1,5 @@
+<img src="assets/icon/app_icon.png" width="128" alt="Snazzy Spelling icon">
+
 # Snazzy Spelling
 
 A spelling practice app for kids. Create custom word lists, then test spelling with text-to-speech audio prompts and an on-screen keyboard.
