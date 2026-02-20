@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="assets/icon/app_icon.png" width="64" alt="Snazzy Spelling icon"><br>
+  <img src="assets/icon/app_icon.png" width="128" alt="Snazzy Spelling icon"><br>
   Snazzy Spelling
 </h1>
 
