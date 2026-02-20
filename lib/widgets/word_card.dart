@@ -12,24 +12,16 @@ class WordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const buttonRadius = 24.0;
+    const buttonSize = 48.0;
     const margin = 24.0;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(margin, margin, margin, margin),
-      child: Column(
+      child: Stack(
         children: [
-          if (onSpeak != null)
-            Transform.translate(
-              offset: const Offset(0, buttonRadius),
-              child: IconButton.filledTonal(
-                onPressed: onSpeak,
-                icon: const Icon(Icons.volume_up),
-                iconSize: 32,
-                tooltip: 'Listen',
-              ),
-            ),
-          Expanded(
+          // Card inset by half the button height so button sits within bounds
+          Positioned.fill(
+            top: buttonSize / 2,
             child: Card(
               margin: EdgeInsets.zero,
               child: Padding(
@@ -57,6 +49,17 @@ class WordCard extends StatelessWidget {
               ),
             ),
           ),
+          // Button on top, centered horizontally, straddling the card's top edge
+          if (onSpeak != null)
+            Align(
+              alignment: Alignment.topCenter,
+              child: IconButton.filledTonal(
+                onPressed: onSpeak,
+                icon: const Icon(Icons.volume_up),
+                iconSize: 32,
+                tooltip: 'Listen',
+              ),
+            ),
         ],
       ),
     );
