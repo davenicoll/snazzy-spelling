@@ -32,16 +32,15 @@ class _TestScreenState extends State<TestScreen> {
   @override
   void initState() {
     super.initState();
-    _initTts();
-    _loadWordlist();
+    _init();
   }
 
-  Future<void> _initTts() async {
+  Future<void> _init() async {
     await _tts.setLanguage('en-US');
     await _tts.setSpeechRate(0.4);
-  }
+    await _tts.awaitSpeakCompletion(true);
+    if (!mounted) return;
 
-  Future<void> _loadWordlist() async {
     final provider = context.read<WordlistProvider>();
     final wordlist = await provider.getById(widget.wordlistId);
     if (mounted && wordlist != null) {

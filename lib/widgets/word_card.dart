@@ -12,42 +12,55 @@ class WordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(24),
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return SizedBox(
-                  width: constraints.maxWidth * 0.8,
-                  child: FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Text(
-                      word,
-                      style: Theme.of(context)
-                          .textTheme
-                          .displayMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                    ),
-                  ),
-                );
-              },
-            ),
-            if (onSpeak != null) ...[
-              const SizedBox(height: 32),
-              IconButton.filledTonal(
-                onPressed: onSpeak,
-                icon: const Icon(Icons.volume_up),
-                iconSize: 32,
-                tooltip: 'Listen',
+    const buttonSize = 48.0;
+    const margin = 24.0;
+
+    return Padding(
+      padding: const EdgeInsets.all(margin),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Center(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SizedBox(
+                      width: constraints.maxWidth * 0.8,
+                      child: FittedBox(
+                        fit: BoxFit.fitWidth,
+                        child: Text(
+                          word,
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ],
-          ],
-        ),
+            ),
+          ),
+          if (onSpeak != null)
+            Positioned(
+              top: -buttonSize / 2,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: IconButton.filledTonal(
+                  onPressed: onSpeak,
+                  icon: const Icon(Icons.volume_up),
+                  iconSize: 32,
+                  tooltip: 'Listen',
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
