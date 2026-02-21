@@ -6,15 +6,19 @@ class SettingsProvider extends ChangeNotifier {
   bool _hasPinSet = false;
   bool _isLoaded = false;
   ThemeMode _themeMode = ThemeMode.system;
+  bool _playSounds = true;
 
   bool get hasPinSet => _hasPinSet;
   bool get isLoaded => _isLoaded;
   ThemeMode get themeMode => _themeMode;
+  bool get playSounds => _playSounds;
 
   Future<void> load() async {
     _hasPinSet = await _repo.hasPinSet();
     final themeModeString = await _repo.getSetting('theme_mode');
     _themeMode = _themeModeFromString(themeModeString);
+    final playSoundsString = await _repo.getSetting('play_sounds');
+    _playSounds = playSoundsString != 'false';
     _isLoaded = true;
     notifyListeners();
   }
@@ -31,6 +35,12 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> changePin(String newPin) async {
     await _repo.setPin(newPin);
+    notifyListeners();
+  }
+
+  Future<void> setPlaySounds(bool value) async {
+    await _repo.setSetting('play_sounds', value.toString());
+    _playSounds = value;
     notifyListeners();
   }
 

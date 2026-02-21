@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
 import '../models/wordlist.dart';
 import '../models/test_result.dart';
+import '../providers/settings_provider.dart';
 import '../providers/wordlist_provider.dart';
 import '../providers/test_provider.dart';
+import '../utils/sfx_player.dart';
 import '../widgets/qwerty_keyboard.dart';
 
 class TestScreen extends StatefulWidget {
@@ -18,6 +22,7 @@ class TestScreen extends StatefulWidget {
 
 class _TestScreenState extends State<TestScreen> {
   final FlutterTts _tts = FlutterTts();
+  final SfxPlayer _sfx = SfxPlayer();
   Wordlist? _wordlist;
   List<String> _words = [];
   int _currentIndex = 0;
@@ -36,10 +41,7 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Future<void> _init() async {
-    await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.4);
-    await _tts.awaitSpeakCompletion(true);
-    if (!mounted) return;
+    _initTts();
 
     final provider = context.read<WordlistProvider>();
     final wordlist = await provider.getById(widget.wordlistId);
@@ -53,8 +55,34 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
+  Future<void> _initTts() async {
+    await _tts.setLanguage('en-US');
+    await _tts.setSpeechRate(0.4);
+    await _tts.awaitSpeakCompletion(true);
+    if (Platform.isIOS || Platform.isMacOS) {
+      await _tts.setSharedInstance(true);
+      await _tts.setIosAudioCategory(
+        IosTextToSpeechAudioCategory.playback,
+        [
+          IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+          IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+          IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+        ],
+        IosTextToSpeechAudioMode.defaultMode,
+      );
+    }
+  }
+
+  Future<void> _playSound(String asset) async {
+    if (context.read<SettingsProvider>().playSounds) {
+      await _sfx.play('sounds/$asset');
+    }
+  }
+
   Future<void> _speakCurrentWord() async {
     if (_currentIndex < _words.length) {
+      await _tts.stop();
       await _tts.speak(_words[_currentIndex]);
       if (mounted) {
         setState(() {});
@@ -90,24 +118,27 @@ class _TestScreenState extends State<TestScreen> {
         word: correctWord,
         status: status,
       ));
+      _playSound('correct.mp3');
       setState(() {
         _feedback = 'Correct!';
-        _feedbackColor = const Color(0xFF0072B2);
+        _feedbackColor = const Color(0xFF2E7D32);
       });
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) _moveToNextWord();
       });
     } else if (_attemptNumber == 1) {
       // First wrong attempt
+      _playSound('wrong.mp3');
       setState(() {
         _attemptNumber = 2;
         _typedText = '';
         _feedback = 'Try again';
         _feedbackColor = Colors.orange;
       });
-      _tts.speak(correctWord);
+      _tts.stop().then((_) => _tts.speak(correctWord));
     } else {
       // Second wrong attempt
+      _playSound('wrong.mp3');
       _results.add(TestResult(
         sessionId: 0,
         word: correctWord,
@@ -139,6 +170,7 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Future<void> _finishTest() async {
+    _playSound('finish.mp3');
     final correctCount =
         _results.where((r) => r.status.isCorrect).length;
     final testProvider = context.read<TestProvider>();
@@ -164,6 +196,7 @@ class _TestScreenState extends State<TestScreen> {
   @override
   void dispose() {
     _tts.stop();
+    _sfx.dispose();
     super.dispose();
   }
 
@@ -258,8 +291,9 @@ class _TestScreenState extends State<TestScreen> {
       children: [
         // Replay button
         IconButton.filledTonal(
-          onPressed: () {
+          onPressed: () async {
             if (_currentIndex < _words.length) {
+              await _tts.stop();
               _tts.speak(_words[_currentIndex]);
             }
           },
@@ -328,7 +362,7 @@ class _TestScreenState extends State<TestScreen> {
           correctWord,
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF0072B2),
+                color: const Color(0xFF2E7D32),
               ),
         ),
         const SizedBox(height: 24),

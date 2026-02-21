@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
 import '../models/wordlist.dart';
+import '../providers/settings_provider.dart';
 import '../providers/wordlist_provider.dart';
+import '../utils/sfx_player.dart';
 import '../widgets/word_card.dart';
 
 class FlashcardScreen extends StatefulWidget {
@@ -16,6 +20,7 @@ class FlashcardScreen extends StatefulWidget {
 
 class _FlashcardScreenState extends State<FlashcardScreen> {
   final FlutterTts _tts = FlutterTts();
+  final SfxPlayer _sfx = SfxPlayer();
   final PageController _pageController = PageController();
   Wordlist? _wordlist;
   int _currentIndex = 0;
@@ -27,10 +32,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   }
 
   Future<void> _init() async {
-    await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.4);
-    await _tts.awaitSpeakCompletion(true);
-    if (!mounted) return;
+    _initTts();
 
     final provider = context.read<WordlistProvider>();
     final wordlist = await provider.getById(widget.wordlistId);
@@ -42,13 +44,34 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     }
   }
 
+  Future<void> _initTts() async {
+    await _tts.setLanguage('en-US');
+    await _tts.setSpeechRate(0.4);
+    await _tts.awaitSpeakCompletion(true);
+    if (Platform.isIOS || Platform.isMacOS) {
+      await _tts.setSharedInstance(true);
+      await _tts.setIosAudioCategory(
+        IosTextToSpeechAudioCategory.playback,
+        [
+          IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+          IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+          IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+        ],
+        IosTextToSpeechAudioMode.defaultMode,
+      );
+    }
+  }
+
   Future<void> _speak(String word) async {
+    await _tts.stop();
     await _tts.speak(word);
   }
 
   @override
   void dispose() {
     _tts.stop();
+    _sfx.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -84,6 +107,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             controller: _pageController,
             itemCount: words.length,
             onPageChanged: (index) {
+              if (context.read<SettingsProvider>().playSounds) {
+                _sfx.play('sounds/swipe.mp3');
+              }
               setState(() => _currentIndex = index);
             },
             itemBuilder: (context, index) {

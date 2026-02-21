@@ -103,7 +103,7 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCorrect = result.status.isCorrect;
     final icon = isCorrect ? Icons.check_circle : Icons.cancel;
-    final color = isCorrect ? const Color(0xFF0072B2) : Theme.of(context).colorScheme.error;
+    final color = isCorrect ? const Color(0xFF2E7D32) : Theme.of(context).colorScheme.error;
 
     String attemptText;
     switch (result.status) {

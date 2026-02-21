@@ -85,6 +85,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          const SizedBox(height: 16),
+          Consumer<SettingsProvider>(
+            builder: (context, settings, _) {
+              return Card(
+                child: SwitchListTile(
+                  title: const Text('Play sounds'),
+                  secondary: const Icon(Icons.volume_up_outlined),
+                  value: settings.playSounds,
+                  onChanged: (value) => settings.setPlaySounds(value),
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 32),
           // Wordlists section
           Text(
