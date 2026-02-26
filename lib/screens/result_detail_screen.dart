@@ -118,8 +118,12 @@ class _DetailRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 22),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, color: color, size: 22),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -131,14 +135,30 @@ class _DetailRow extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                 ),
-                if (result.status == TestResultStatus.incorrect &&
-                    result.childAnswer != null)
+                if (result.status == TestResultStatus.correctSecond &&
+                    result.firstAttempt != null)
                   Text(
-                    'Typed: "${result.childAnswer}"',
+                    '1st: "${result.firstAttempt}"',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.error,
                         ),
                   ),
+                if (result.status == TestResultStatus.incorrect) ...[
+                  if (result.firstAttempt != null)
+                    Text(
+                      '1st: "${result.firstAttempt}"',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                  if (result.childAnswer != null)
+                    Text(
+                      '2nd: "${result.childAnswer}"',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                ],
               ],
             ),
           ),

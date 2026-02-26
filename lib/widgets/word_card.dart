@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class WordCard extends StatelessWidget {
   final String word;
   final VoidCallback? onSpeak;
+  final bool isSpeaking;
 
   const WordCard({
     super.key,
     required this.word,
     this.onSpeak,
+    this.isSpeaking = false,
   });
 
   @override
@@ -54,7 +56,7 @@ class WordCard extends StatelessWidget {
             Align(
               alignment: Alignment.topCenter,
               child: IconButton.filledTonal(
-                onPressed: onSpeak,
+                onPressed: isSpeaking ? null : onSpeak,
                 icon: const Icon(Icons.volume_up),
                 iconSize: 32,
                 tooltip: 'Listen',

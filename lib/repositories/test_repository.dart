@@ -28,6 +28,7 @@ class TestRepository {
         'word': result.word,
         'status': result.status.toDbString(),
         'child_answer': result.childAnswer,
+        'first_attempt': result.firstAttempt,
       });
       savedResults.add(TestResult(
         id: resultId,
@@ -35,6 +36,7 @@ class TestRepository {
         word: result.word,
         status: result.status,
         childAnswer: result.childAnswer,
+        firstAttempt: result.firstAttempt,
       ));
     }
 

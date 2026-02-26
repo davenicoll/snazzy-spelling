@@ -29,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -81,12 +81,17 @@ class DatabaseHelper {
         word TEXT NOT NULL,
         status TEXT NOT NULL,
         child_answer TEXT,
+        first_attempt TEXT,
         FOREIGN KEY (session_id) REFERENCES test_sessions(id) ON DELETE CASCADE
       )
     ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Future migrations go here
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE test_results ADD COLUMN first_attempt TEXT',
+      );
+    }
   }
 }

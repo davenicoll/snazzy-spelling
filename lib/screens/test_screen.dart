@@ -31,6 +31,8 @@ class _TestScreenState extends State<TestScreen> {
   String? _feedback;
   Color? _feedbackColor;
   bool _showCorrection = false;
+  bool _isSpeaking = false;
+  String? _firstAttemptText;
 
   final List<TestResult> _results = [];
 
@@ -59,6 +61,18 @@ class _TestScreenState extends State<TestScreen> {
     await _tts.setLanguage('en-US');
     await _tts.setSpeechRate(0.4);
     await _tts.awaitSpeakCompletion(true);
+    _tts.setStartHandler(() {
+      if (mounted) setState(() => _isSpeaking = true);
+    });
+    _tts.setCompletionHandler(() {
+      if (mounted) setState(() => _isSpeaking = false);
+    });
+    _tts.setCancelHandler(() {
+      if (mounted) setState(() => _isSpeaking = false);
+    });
+    _tts.setErrorHandler((msg) {
+      if (mounted) setState(() => _isSpeaking = false);
+    });
     if (Platform.isIOS || Platform.isMacOS) {
       await _tts.setSharedInstance(true);
       await _tts.setIosAudioCategory(
@@ -117,6 +131,7 @@ class _TestScreenState extends State<TestScreen> {
         sessionId: 0,
         word: correctWord,
         status: status,
+        firstAttempt: _firstAttemptText,
       ));
       _playSound('correct.mp3');
       setState(() {
@@ -128,6 +143,7 @@ class _TestScreenState extends State<TestScreen> {
       });
     } else if (_attemptNumber == 1) {
       // First wrong attempt
+      _firstAttemptText = _typedText.trim();
       _playSound('wrong.mp3');
       setState(() {
         _attemptNumber = 2;
@@ -143,6 +159,7 @@ class _TestScreenState extends State<TestScreen> {
         sessionId: 0,
         word: correctWord,
         status: TestResultStatus.incorrect,
+        firstAttempt: _firstAttemptText,
         childAnswer: _typedText.trim(),
       ));
       setState(() {
@@ -162,6 +179,7 @@ class _TestScreenState extends State<TestScreen> {
       _currentIndex++;
       _typedText = '';
       _attemptNumber = 1;
+      _firstAttemptText = null;
       _feedback = null;
       _feedbackColor = null;
       _showCorrection = false;
@@ -291,12 +309,13 @@ class _TestScreenState extends State<TestScreen> {
       children: [
         // Replay button
         IconButton.filledTonal(
-          onPressed: () async {
-            if (_currentIndex < _words.length) {
-              await _tts.stop();
-              _tts.speak(_words[_currentIndex]);
-            }
-          },
+          onPressed: _isSpeaking
+              ? null
+              : () {
+                  if (_currentIndex < _words.length) {
+                    _tts.speak(_words[_currentIndex]);
+                  }
+                },
           icon: const Icon(Icons.volume_up),
           iconSize: 32,
           tooltip: 'Listen again',
