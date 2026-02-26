@@ -61,7 +61,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     _tts.setErrorHandler((msg) {
       if (mounted) setState(() => _isSpeaking = false);
     });
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (Platform.isIOS) {
       await _tts.setSharedInstance(true);
       await _tts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,

@@ -73,7 +73,7 @@ class _TestScreenState extends State<TestScreen> {
     _tts.setErrorHandler((msg) {
       if (mounted) setState(() => _isSpeaking = false);
     });
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (Platform.isIOS) {
       await _tts.setSharedInstance(true);
       await _tts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
