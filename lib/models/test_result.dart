@@ -38,6 +38,7 @@ class TestResult {
   final String word;
   final TestResultStatus status;
   final String? childAnswer;
+  final String? firstAttempt;
 
   TestResult({
     this.id,
@@ -45,6 +46,7 @@ class TestResult {
     required this.word,
     required this.status,
     this.childAnswer,
+    this.firstAttempt,
   });
 
   Map<String, dynamic> toMap() {
@@ -54,6 +56,7 @@ class TestResult {
       'word': word,
       'status': status.toDbString(),
       'child_answer': childAnswer,
+      'first_attempt': firstAttempt,
     };
   }
 
@@ -64,6 +67,7 @@ class TestResult {
       word: map['word'] as String,
       status: TestResultStatus.fromDbString(map['status'] as String),
       childAnswer: map['child_answer'] as String?,
+      firstAttempt: map['first_attempt'] as String?,
     );
   }
 }

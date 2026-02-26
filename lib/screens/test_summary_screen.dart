@@ -141,21 +141,54 @@ class _ResultRow extends StatelessWidget {
       case TestResultStatus.correctSecond:
         subtitle = '2nd attempt';
       case TestResultStatus.incorrect:
-        subtitle = 'Incorrect — typed "${result.childAnswer}"';
+        subtitle = 'Incorrect';
     }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, color: color, size: 20),
+          ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              result.word,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  result.word,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+                if (result.status == TestResultStatus.correctSecond &&
+                    result.firstAttempt != null)
+                  Text(
+                    '1st: "${result.firstAttempt}"',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                   ),
+                if (result.status == TestResultStatus.incorrect) ...[
+                  if (result.firstAttempt != null)
+                    Text(
+                      '1st: "${result.firstAttempt}"',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                  if (result.childAnswer != null)
+                    Text(
+                      '2nd: "${result.childAnswer}"',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                ],
+              ],
             ),
           ),
           Text(

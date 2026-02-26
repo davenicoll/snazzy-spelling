@@ -24,6 +24,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   final PageController _pageController = PageController();
   Wordlist? _wordlist;
   int _currentIndex = 0;
+  bool _isSpeaking = false;
 
   @override
   void initState() {
@@ -48,7 +49,19 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     await _tts.setLanguage('en-US');
     await _tts.setSpeechRate(0.4);
     await _tts.awaitSpeakCompletion(true);
-    if (Platform.isIOS || Platform.isMacOS) {
+    _tts.setStartHandler(() {
+      if (mounted) setState(() => _isSpeaking = true);
+    });
+    _tts.setCompletionHandler(() {
+      if (mounted) setState(() => _isSpeaking = false);
+    });
+    _tts.setCancelHandler(() {
+      if (mounted) setState(() => _isSpeaking = false);
+    });
+    _tts.setErrorHandler((msg) {
+      if (mounted) setState(() => _isSpeaking = false);
+    });
+    if (Platform.isIOS) {
       await _tts.setSharedInstance(true);
       await _tts.setIosAudioCategory(
         IosTextToSpeechAudioCategory.playback,
@@ -64,7 +77,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   }
 
   Future<void> _speak(String word) async {
-    await _tts.stop();
+    if (_isSpeaking) return;
     await _tts.speak(word);
   }
 
@@ -116,6 +129,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               return WordCard(
                 word: words[index],
                 onSpeak: () => _speak(words[index]),
+                isSpeaking: _isSpeaking,
               );
             },
           ),
