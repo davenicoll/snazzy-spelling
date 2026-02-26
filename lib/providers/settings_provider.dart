@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/color_theme.dart';
 import '../repositories/settings_repository.dart';
 
 class SettingsProvider extends ChangeNotifier {
@@ -6,17 +7,21 @@ class SettingsProvider extends ChangeNotifier {
   bool _hasPinSet = false;
   bool _isLoaded = false;
   ThemeMode _themeMode = ThemeMode.system;
+  ColorTheme _colorTheme = ColorTheme.snazzy;
   bool _playSounds = true;
 
   bool get hasPinSet => _hasPinSet;
   bool get isLoaded => _isLoaded;
   ThemeMode get themeMode => _themeMode;
+  ColorTheme get colorTheme => _colorTheme;
   bool get playSounds => _playSounds;
 
   Future<void> load() async {
     _hasPinSet = await _repo.hasPinSet();
     final themeModeString = await _repo.getSetting('theme_mode');
     _themeMode = _themeModeFromString(themeModeString);
+    final colorThemeString = await _repo.getSetting('color_theme');
+    _colorTheme = ColorTheme.fromStorageString(colorThemeString);
     final playSoundsString = await _repo.getSetting('play_sounds');
     _playSounds = playSoundsString != 'false';
     _isLoaded = true;
@@ -35,6 +40,12 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> changePin(String newPin) async {
     await _repo.setPin(newPin);
+    notifyListeners();
+  }
+
+  Future<void> setColorTheme(ColorTheme theme) async {
+    await _repo.setSetting('color_theme', theme.toStorageString());
+    _colorTheme = theme;
     notifyListeners();
   }
 

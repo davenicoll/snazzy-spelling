@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/color_theme.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/wordlist_provider.dart';
 
@@ -78,6 +79,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onSelectionChanged: (selected) {
                           settings.setThemeMode(selected.first);
                         },
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Color',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: ColorTheme.values.map((theme) {
+                          final selected = settings.colorTheme == theme;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: GestureDetector(
+                              onTap: () => settings.setColorTheme(theme),
+                              child: Column(
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: theme.seedColor,
+                                      shape: BoxShape.circle,
+                                      border: selected
+                                          ? Border.all(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                              width: 3,
+                                            )
+                                          : null,
+                                    ),
+                                    child: selected
+                                        ? const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    theme.label,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          fontWeight: selected
+                                              ? FontWeight.w600
+                                              : null,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ],
                   ),

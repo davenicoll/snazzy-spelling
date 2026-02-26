@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/test_session.dart';
 import '../models/test_result.dart';
+import '../providers/settings_provider.dart';
 import '../providers/test_provider.dart';
 
 class TestSummaryScreen extends StatefulWidget {
@@ -132,7 +133,8 @@ class _ResultRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCorrect = result.status.isCorrect;
     final icon = isCorrect ? Icons.check_circle : Icons.cancel;
-    final color = isCorrect ? const Color(0xFF2E7D32) : Theme.of(context).colorScheme.error;
+    final colorTheme = context.read<SettingsProvider>().colorTheme;
+    final color = isCorrect ? colorTheme.correctColor : colorTheme.incorrectColor;
 
     String subtitle;
     switch (result.status) {

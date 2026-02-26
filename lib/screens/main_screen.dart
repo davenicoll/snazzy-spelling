@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/settings_provider.dart';
 import '../providers/wordlist_provider.dart';
+import '../utils/sfx_player.dart';
 import '../widgets/sort_controls.dart';
 import 'package:intl/intl.dart';
 
@@ -12,10 +14,28 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  static bool _startupPlayed = false;
+  SfxPlayer? _sfx;
+
   @override
   void initState() {
     super.initState();
     context.read<WordlistProvider>().load();
+    if (!_startupPlayed) {
+      _startupPlayed = true;
+      if (context.read<SettingsProvider>().playSounds) {
+        _sfx = SfxPlayer();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _sfx?.play('sounds/startup.mp3');
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _sfx?.dispose();
+    super.dispose();
   }
 
   @override

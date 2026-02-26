@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/test_session.dart';
 import '../models/test_result.dart';
+import '../providers/settings_provider.dart';
 import '../providers/test_provider.dart';
 
 class ResultDetailScreen extends StatefulWidget {
@@ -103,7 +104,8 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCorrect = result.status.isCorrect;
     final icon = isCorrect ? Icons.check_circle : Icons.cancel;
-    final color = isCorrect ? const Color(0xFF2E7D32) : Theme.of(context).colorScheme.error;
+    final colorTheme = context.read<SettingsProvider>().colorTheme;
+    final color = isCorrect ? colorTheme.correctColor : colorTheme.incorrectColor;
 
     String attemptText;
     switch (result.status) {

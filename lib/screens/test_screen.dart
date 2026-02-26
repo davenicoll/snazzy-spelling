@@ -136,7 +136,7 @@ class _TestScreenState extends State<TestScreen> {
       _playSound('correct.mp3');
       setState(() {
         _feedback = 'Correct!';
-        _feedbackColor = const Color(0xFF2E7D32);
+        _feedbackColor = context.read<SettingsProvider>().colorTheme.correctColor;
       });
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) _moveToNextWord();
@@ -149,7 +149,7 @@ class _TestScreenState extends State<TestScreen> {
         _attemptNumber = 2;
         _typedText = '';
         _feedback = 'Try again';
-        _feedbackColor = Colors.orange;
+        _feedbackColor = context.read<SettingsProvider>().colorTheme.incorrectColor;
       });
       _tts.stop().then((_) => _tts.speak(correctWord));
     } else {
@@ -381,7 +381,7 @@ class _TestScreenState extends State<TestScreen> {
           correctWord,
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF2E7D32),
+                color: context.read<SettingsProvider>().colorTheme.correctColor,
               ),
         ),
         const SizedBox(height: 24),

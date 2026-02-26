@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'models/color_theme.dart';
 import 'providers/settings_provider.dart';
 import 'providers/wordlist_provider.dart';
 import 'providers/test_provider.dart';
@@ -26,8 +27,7 @@ void main() {
 class SnazzySpellingApp extends StatelessWidget {
   const SnazzySpellingApp({super.key});
 
-  static ThemeData _buildTheme(Brightness brightness) {
-    const seedColor = Color(0xFF7B5EA7);
+  static ThemeData _buildTheme(Brightness brightness, ColorTheme colorTheme) {
     const interTextTheme = TextTheme(
       displayLarge: TextStyle(fontFamily: 'Inter'),
       displayMedium: TextStyle(fontFamily: 'Inter'),
@@ -46,11 +46,7 @@ class SnazzySpellingApp extends StatelessWidget {
       labelSmall: TextStyle(fontFamily: 'Inter'),
     );
 
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: seedColor,
-      brightness: brightness,
-      contrastLevel: 0.5,
-    );
+    final colorScheme = colorTheme.buildColorScheme(brightness);
 
     return ThemeData(
       colorScheme: colorScheme,
@@ -80,8 +76,8 @@ class SnazzySpellingApp extends StatelessWidget {
           return MaterialApp(
             title: 'Snazzy Spelling',
             debugShowCheckedModeBanner: false,
-            theme: _buildTheme(Brightness.light),
-            darkTheme: _buildTheme(Brightness.dark),
+            theme: _buildTheme(Brightness.light, settings.colorTheme),
+            darkTheme: _buildTheme(Brightness.dark, settings.colorTheme),
             themeMode: settings.themeMode,
             home: const _AppBootstrap(),
             onGenerateRoute: _onGenerateRoute,

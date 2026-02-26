@@ -210,7 +210,7 @@ class _CheckKey extends StatelessWidget {
         width: width,
         height: height,
         child: Material(
-          color: Theme.of(context).colorScheme.primary,
+          color: Theme.of(context).colorScheme.tertiary,
           borderRadius: BorderRadius.circular(6),
           child: InkWell(
             borderRadius: BorderRadius.circular(6),
@@ -221,7 +221,7 @@ class _CheckKey extends StatelessWidget {
                 style: TextStyle(
                   fontSize: height * 0.35,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onPrimary,
+                  color: Theme.of(context).colorScheme.onTertiary,
                 ),
               ),
             ),

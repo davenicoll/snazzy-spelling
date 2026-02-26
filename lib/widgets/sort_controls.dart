@@ -17,7 +17,9 @@ class SortControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
         children: [
           Text(
             'Sort by:',
@@ -47,6 +49,7 @@ class SortControls extends StatelessWidget {
             onTap: () => onToggleSort(SortField.createdAt),
           ),
         ],
+      ),
       ),
     );
   }
