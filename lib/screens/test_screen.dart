@@ -188,16 +188,22 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Future<void> _finishTest() async {
-    _playSound('finish.mp3');
+    // Play the finish sound and save concurrently, then wait for both
+    // so the sound isn't cut off when we navigate away and dispose().
+    final soundFuture = _playSound('finish.mp3')
+        .then((_) => Future.delayed(const Duration(milliseconds: 1500)));
     final correctCount =
         _results.where((r) => r.status.isCorrect).length;
     final testProvider = context.read<TestProvider>();
-    final session = await testProvider.saveSession(
+    final saveFuture = testProvider.saveSession(
       wordlistId: widget.wordlistId,
       totalWords: _words.length,
       correctCount: correctCount,
       results: _results,
     );
+
+    final results = await Future.wait([soundFuture, saveFuture]);
+    final session = results[1];
 
     if (!mounted) return;
 

@@ -44,13 +44,15 @@ class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
 
   void _addWord() {
     final word = _wordController.text.trim();
-    if (word.isNotEmpty && !_words.contains(word.toLowerCase())) {
-      setState(() {
-        _words.add(word);
-        _wordController.clear();
-      });
-      _wordFocusNode.requestFocus();
-    }
+    if (word.isEmpty) return;
+    _wordController.clear();
+    _wordFocusNode.requestFocus();
+    // Silently ignore duplicates (case-insensitive)
+    if (_words.any((w) => w.toLowerCase() == word.toLowerCase())) return;
+    setState(() {
+      _words.add(word);
+      _words.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    });
   }
 
   void _removeWord(int index) {
@@ -146,7 +148,7 @@ class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
                       border: OutlineInputBorder(),
                     ),
                     onSubmitted: (_) => _addWord(),
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.go,
                   ),
                 ),
                 const SizedBox(width: 8),

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/color_theme.dart';
@@ -155,6 +158,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          if (Platform.isAndroid) ...[
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.record_voice_over_outlined),
+                title: const Text('Text-to-Speech Settings'),
+                subtitle: const Text('Change voice, speed, and language'),
+                trailing: const Icon(Icons.open_in_new),
+                onTap: () {
+                  const AndroidIntent(
+                    action: 'com.android.settings.TTS_SETTINGS',
+                  ).launch();
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 32),
           // Wordlists section
           Text(

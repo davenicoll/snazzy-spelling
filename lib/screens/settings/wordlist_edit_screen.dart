@@ -31,6 +31,7 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
       setState(() {
         _nameController.text = wordlist.name;
         _words.addAll(wordlist.words);
+        _words.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         _isLoaded = true;
       });
     }
@@ -38,13 +39,14 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
 
   void _addWord() {
     final word = _wordController.text.trim();
-    if (word.isNotEmpty && !_words.contains(word.toLowerCase())) {
-      setState(() {
-        _words.add(word);
-        _wordController.clear();
-      });
-      _wordFocusNode.requestFocus();
-    }
+    if (word.isEmpty) return;
+    _wordController.clear();
+    _wordFocusNode.requestFocus();
+    if (_words.any((w) => w.toLowerCase() == word.toLowerCase())) return;
+    setState(() {
+      _words.add(word);
+      _words.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    });
   }
 
   void _removeWord(int index) {
@@ -113,7 +115,7 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
                       border: OutlineInputBorder(),
                     ),
                     onSubmitted: (_) => _addWord(),
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.go,
                   ),
                 ),
                 const SizedBox(width: 8),

@@ -1,7 +1,7 @@
 name: snazzy_spelling
 description: "Snazzy Spelling - A spelling practice app for children"
 publish_to: 'none'
-version: 1.0.6+7
+version: 1.0.7+8
 
 environment:
   sdk: ^3.10.4
@@ -18,6 +18,7 @@ dependencies:
   intl: ^0.20.2
   provider: ^6.1.4
   audioplayers: ^6.1.0
+  android_intent_plus: ^6.0.0
 
 dev_dependencies:
   flutter_test:

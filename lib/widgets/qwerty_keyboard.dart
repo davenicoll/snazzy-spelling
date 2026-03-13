@@ -22,62 +22,63 @@ class QwertyKeyboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final effectiveWidth = constraints.maxWidth.clamp(0.0, 600.0);
-        final actionKeyWidth = (effectiveWidth * 0.18).clamp(60.0, 100.0);
-        // Estimate letter area to derive consistent keyHeight for action keys
-        final letterArea = effectiveWidth - actionKeyWidth - 18;
-        final keyWidth = ((letterArea - 10 * 6) / 10).clamp(18.0, 44.0);
-        final keyHeight = (keyWidth * 1.1).clamp(28.0, 48.0);
+        // Allow up to 900px on tablets, no longer capped at 600
+        final effectiveWidth = constraints.maxWidth.clamp(0.0, 900.0);
+
+        // Action key takes ~16% of width
+        final actionKeyWidth = (effectiveWidth * 0.16).clamp(60.0, 120.0);
+        final gap = (effectiveWidth * 0.015).clamp(8.0, 14.0);
+
+        // Letter area = total minus action column and gap
+        final letterAreaWidth = effectiveWidth - actionKeyWidth - gap;
+
+        // 10 keys in the widest row; derive key size from available space
+        // Gap between keys scales proportionally
+        final keyGap = (letterAreaWidth * 0.008).clamp(2.0, 5.0);
+        final totalGaps = 10 * 2 * keyGap; // padding on both sides of each key
+        final keyWidth = ((letterAreaWidth - totalGaps) / 10).clamp(24.0, 64.0);
+        final keyHeight = (keyWidth * 1.15).clamp(36.0, 60.0);
+        final rowGap = (keyHeight * 0.08).clamp(2.0, 5.0);
 
         return Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: const BoxConstraints(maxWidth: 900),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Letter keys (left section)
+                // Letter keys
                 Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, letterConstraints) {
-                      final available = letterConstraints.maxWidth;
-                      final lkw =
-                          ((available - 10 * 6) / 10).clamp(18.0, 44.0);
-                      final lkh = (lkw * 1.1).clamp(28.0, 48.0);
-
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          for (final row in _rows)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 2),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: row
-                                    .map((letter) => _LetterKey(
-                                          letter: letter,
-                                          width: lkw,
-                                          height: lkh,
-                                          onPressed: () =>
-                                              onKeyPressed(letter),
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      for (final row in _rows)
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: rowGap),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: row
+                                .map((letter) => _LetterKey(
+                                      letter: letter,
+                                      width: keyWidth,
+                                      height: keyHeight,
+                                      gap: keyGap,
+                                      onPressed: () => onKeyPressed(letter),
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Action keys (right section): Delete + Check
+                SizedBox(width: gap),
+                // Action keys: Delete aligned with top row, Check with bottom
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Delete — aligned with top row
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      padding: EdgeInsets.symmetric(vertical: rowGap),
                       child: _LabelActionKey(
                         label: 'Delete',
                         width: actionKeyWidth,
@@ -86,10 +87,10 @@ class QwertyKeyboard extends StatelessWidget {
                       ),
                     ),
                     // Spacer for middle row
-                    SizedBox(height: keyHeight + 4),
+                    SizedBox(height: keyHeight + rowGap * 2),
                     // Check — aligned with bottom row
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      padding: EdgeInsets.symmetric(vertical: rowGap),
                       child: _CheckKey(
                         width: actionKeyWidth,
                         height: keyHeight,
@@ -111,19 +112,21 @@ class _LetterKey extends StatelessWidget {
   final String letter;
   final double width;
   final double height;
+  final double gap;
   final VoidCallback onPressed;
 
   const _LetterKey({
     required this.letter,
     required this.width,
     required this.height,
+    required this.gap,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
+      padding: EdgeInsets.symmetric(horizontal: gap),
       child: SizedBox(
         width: width,
         height: height,
@@ -164,24 +167,21 @@ class _LabelActionKey extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Material(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Material(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
           borderRadius: BorderRadius.circular(6),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(6),
-            onTap: onPressed,
-            child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: height * 0.3,
-                  fontWeight: FontWeight.w500,
-                ),
+          onTap: onPressed,
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: height * 0.3,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -204,25 +204,22 @@ class _CheckKey extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Material(
-          color: Theme.of(context).colorScheme.tertiary,
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Material(
+        color: Theme.of(context).colorScheme.tertiary,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
           borderRadius: BorderRadius.circular(6),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(6),
-            onTap: onPressed,
-            child: Center(
-              child: Text(
-                'Check',
-                style: TextStyle(
-                  fontSize: height * 0.35,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onTertiary,
-                ),
+          onTap: onPressed,
+          child: Center(
+            child: Text(
+              'Check',
+              style: TextStyle(
+                fontSize: height * 0.35,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onTertiary,
               ),
             ),
           ),
