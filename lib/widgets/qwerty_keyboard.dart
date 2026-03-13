@@ -22,20 +22,15 @@ class QwertyKeyboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Allow up to 900px on tablets, no longer capped at 600
         final effectiveWidth = constraints.maxWidth.clamp(0.0, 900.0);
 
-        // Action key takes ~16% of width
         final actionKeyWidth = (effectiveWidth * 0.16).clamp(60.0, 120.0);
         final gap = (effectiveWidth * 0.015).clamp(8.0, 14.0);
 
-        // Letter area = total minus action column and gap
         final letterAreaWidth = effectiveWidth - actionKeyWidth - gap;
 
-        // 10 keys in the widest row; derive key size from available space
-        // Gap between keys scales proportionally
         final keyGap = (letterAreaWidth * 0.008).clamp(2.0, 5.0);
-        final totalGaps = 10 * 2 * keyGap; // padding on both sides of each key
+        final totalGaps = 10 * 2 * keyGap;
         final keyWidth = ((letterAreaWidth - totalGaps) / 10).clamp(24.0, 64.0);
         final keyHeight = (keyWidth * 1.15).clamp(36.0, 60.0);
         final rowGap = (keyHeight * 0.08).clamp(2.0, 5.0);
@@ -76,19 +71,16 @@ class QwertyKeyboard extends StatelessWidget {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Delete — aligned with top row
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: rowGap),
-                      child: _LabelActionKey(
+                      child: _ActionKey(
                         label: 'Delete',
                         width: actionKeyWidth,
                         height: keyHeight,
                         onPressed: onBackspace,
                       ),
                     ),
-                    // Spacer for middle row
                     SizedBox(height: keyHeight + rowGap * 2),
-                    // Check — aligned with bottom row
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: rowGap),
                       child: _CheckKey(
@@ -108,7 +100,10 @@ class QwertyKeyboard extends StatelessWidget {
   }
 }
 
-class _LetterKey extends StatelessWidget {
+/// A keyboard key that fires on tap-down for immediate response,
+/// with a brief highlight instead of InkWell's splash (which debounces
+/// rapid taps and drops key presses).
+class _LetterKey extends StatefulWidget {
   final String letter;
   final double width;
   final double height;
@@ -124,23 +119,45 @@ class _LetterKey extends StatelessWidget {
   });
 
   @override
+  State<_LetterKey> createState() => _LetterKeyState();
+}
+
+class _LetterKeyState extends State<_LetterKey> {
+  bool _pressed = false;
+
+  void _handleTapDown(TapDownDetails _) {
+    setState(() => _pressed = true);
+    widget.onPressed();
+    // Brief highlight then reset
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _pressed = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final baseColor = Theme.of(context).colorScheme.surfaceContainerHighest;
+    final pressedColor = Theme.of(context).colorScheme.inversePrimary;
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: gap),
+      padding: EdgeInsets.symmetric(horizontal: widget.gap),
       child: SizedBox(
-        width: width,
-        height: height,
-        child: Material(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(6),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(6),
-            onTap: onPressed,
+        width: widget.width,
+        height: widget.height,
+        child: GestureDetector(
+          onTapDown: _handleTapDown,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 80),
+            decoration: BoxDecoration(
+              color: _pressed ? pressedColor : baseColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
             child: Center(
               child: Text(
-                letter,
+                widget.letter,
                 style: TextStyle(
-                  fontSize: width * 0.45,
+                  fontSize: widget.width * 0.45,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -152,13 +169,13 @@ class _LetterKey extends StatelessWidget {
   }
 }
 
-class _LabelActionKey extends StatelessWidget {
+class _ActionKey extends StatefulWidget {
   final String label;
   final double width;
   final double height;
   final VoidCallback onPressed;
 
-  const _LabelActionKey({
+  const _ActionKey({
     required this.label,
     required this.width,
     required this.height,
@@ -166,21 +183,42 @@ class _LabelActionKey extends StatelessWidget {
   });
 
   @override
+  State<_ActionKey> createState() => _ActionKeyState();
+}
+
+class _ActionKeyState extends State<_ActionKey> {
+  bool _pressed = false;
+
+  void _handleTapDown(TapDownDetails _) {
+    setState(() => _pressed = true);
+    widget.onPressed();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _pressed = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final baseColor = Theme.of(context).colorScheme.surfaceContainerHigh;
+    final pressedColor = Theme.of(context).colorScheme.inversePrimary;
+
     return SizedBox(
-      width: width,
-      height: height,
-      child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(6),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(6),
-          onTap: onPressed,
+      width: widget.width,
+      height: widget.height,
+      child: GestureDetector(
+        onTapDown: _handleTapDown,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 80),
+          decoration: BoxDecoration(
+            color: _pressed ? pressedColor : baseColor,
+            borderRadius: BorderRadius.circular(6),
+          ),
           child: Center(
             child: Text(
-              label,
+              widget.label,
               style: TextStyle(
-                fontSize: height * 0.3,
+                fontSize: widget.height * 0.3,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -191,7 +229,7 @@ class _LabelActionKey extends StatelessWidget {
   }
 }
 
-class _CheckKey extends StatelessWidget {
+class _CheckKey extends StatefulWidget {
   final double width;
   final double height;
   final VoidCallback onPressed;
@@ -203,21 +241,42 @@ class _CheckKey extends StatelessWidget {
   });
 
   @override
+  State<_CheckKey> createState() => _CheckKeyState();
+}
+
+class _CheckKeyState extends State<_CheckKey> {
+  bool _pressed = false;
+
+  void _handleTapDown(TapDownDetails _) {
+    setState(() => _pressed = true);
+    widget.onPressed();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _pressed = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final baseColor = Theme.of(context).colorScheme.tertiary;
+    final pressedColor = Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.7);
+
     return SizedBox(
-      width: width,
-      height: height,
-      child: Material(
-        color: Theme.of(context).colorScheme.tertiary,
-        borderRadius: BorderRadius.circular(6),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(6),
-          onTap: onPressed,
+      width: widget.width,
+      height: widget.height,
+      child: GestureDetector(
+        onTapDown: _handleTapDown,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 80),
+          decoration: BoxDecoration(
+            color: _pressed ? pressedColor : baseColor,
+            borderRadius: BorderRadius.circular(6),
+          ),
           child: Center(
             child: Text(
               'Check',
               style: TextStyle(
-                fontSize: height * 0.35,
+                fontSize: widget.height * 0.35,
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onTertiary,
               ),
