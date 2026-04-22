@@ -110,6 +110,16 @@ class WordlistRepository {
     }
   }
 
+  Future<void> setCompleted(int id, bool isCompleted) async {
+    final db = await _dbHelper.database;
+    await db.update(
+      'wordlists',
+      {'is_completed': isCompleted ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<void> delete(int id) async {
     final db = await _dbHelper.database;
     // CASCADE will handle words, test_sessions, test_results, and

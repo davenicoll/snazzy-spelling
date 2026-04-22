@@ -83,6 +83,15 @@ class WordlistProvider extends ChangeNotifier {
     await load();
   }
 
+  Future<void> setCompleted(int id, bool isCompleted) async {
+    await _repo.setCompleted(id, isCompleted);
+    final index = _wordlists.indexWhere((w) => w.id == id);
+    if (index != -1) {
+      _wordlists[index] = _wordlists[index].copyWith(isCompleted: isCompleted);
+    }
+    notifyListeners();
+  }
+
   Future<void> delete(int id) async {
     await _repo.delete(id);
     _wordlists.removeWhere((w) => w.id == id);
