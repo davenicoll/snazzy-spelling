@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/test_session.dart';
@@ -23,6 +26,12 @@ class TestSummaryScreen extends StatefulWidget {
 
 class _TestSummaryScreenState extends State<TestSummaryScreen> {
   TestSession? _session;
+  // Animation duration on the controller caps the emission loop; we stop it
+  // explicitly after ~5s and dispose it when the screen is torn down so no
+  // particles or timers are left behind.
+  static const Duration _confettiDuration = Duration(seconds: 5);
+  final ConfettiController _confettiController =
+      ConfettiController(duration: _confettiDuration);
 
   @override
   void initState() {
@@ -30,11 +39,22 @@ class _TestSummaryScreenState extends State<TestSummaryScreen> {
     _loadSession();
   }
 
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadSession() async {
     final provider = context.read<TestProvider>();
     final session = await provider.getSessionWithResults(widget.sessionId);
-    if (mounted) {
-      setState(() => _session = session);
+    if (!mounted) return;
+    setState(() => _session = session);
+    if (session != null && session.isPerfect) {
+      _confettiController.play();
+      Future.delayed(_confettiDuration, () {
+        if (mounted) _confettiController.stop();
+      });
     }
   }
 
@@ -53,7 +73,35 @@ class _TestSummaryScreenState extends State<TestSummaryScreen> {
         title: const Text('Test Complete'),
         automaticallyImplyLeading: false,
       ),
-      body: SafeArea(
+      body: Stack(
+        children: [
+          _buildSummaryBody(session),
+          // Non-blocking confetti overlay: IgnorePointer lets taps fall through
+          // to the buttons underneath, and the controller is stopped+disposed
+          // in _loadSession / dispose so no timers or particles linger.
+          Align(
+            alignment: Alignment.topCenter,
+            child: IgnorePointer(
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirection: pi / 2, // straight down
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.05,
+                numberOfParticles: 12,
+                maxBlastForce: 20,
+                minBlastForce: 8,
+                gravity: 0.25,
+                shouldLoop: false,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryBody(TestSession session) {
+    return SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Center(
@@ -119,8 +167,7 @@ class _TestSummaryScreenState extends State<TestSummaryScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
