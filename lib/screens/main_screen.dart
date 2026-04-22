@@ -13,6 +13,29 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
+class _CompletedPill extends StatelessWidget {
+  const _CompletedPill();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        'Completed',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: scheme.onSecondaryContainer,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+}
+
 class _MainScreenState extends State<MainScreen> {
   static bool _startupPlayed = false;
   SfxPlayer? _sfx;
@@ -113,12 +136,23 @@ class _MainScreenState extends State<MainScreen> {
                     final dateFormat = DateFormat('d MMM yyyy');
                     return Card(
                       child: ListTile(
-                        title: Text(
-                          wordlist.name,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                        title: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                wordlist.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            if (wordlist.isCompleted) ...[
+                              const SizedBox(width: 8),
+                              const _CompletedPill(),
+                            ],
+                          ],
                         ),
                         subtitle: Text(
                           '${wordlist.words.length} word${wordlist.words.length == 1 ? '' : 's'} · ${dateFormat.format(wordlist.createdAt)}',

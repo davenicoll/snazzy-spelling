@@ -29,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -51,7 +51,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         created_at TEXT NOT NULL,
-        require_full_flashcard_view INTEGER NOT NULL DEFAULT 0
+        require_full_flashcard_view INTEGER NOT NULL DEFAULT 0,
+        is_completed INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -117,6 +118,11 @@ class DatabaseHelper {
           FOREIGN KEY (wordlist_id) REFERENCES wordlists(id) ON DELETE CASCADE
         )
       ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE wordlists ADD COLUMN is_completed INTEGER NOT NULL DEFAULT 0',
+      );
     }
   }
 }

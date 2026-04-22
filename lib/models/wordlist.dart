@@ -3,6 +3,7 @@ class Wordlist {
   final String name;
   final DateTime createdAt;
   final bool requireFullFlashcardView;
+  final bool isCompleted;
   List<String> words;
 
   Wordlist({
@@ -10,6 +11,7 @@ class Wordlist {
     required this.name,
     required this.createdAt,
     this.requireFullFlashcardView = false,
+    this.isCompleted = false,
     this.words = const [],
   });
 
@@ -19,6 +21,7 @@ class Wordlist {
       'name': name,
       'created_at': createdAt.toIso8601String(),
       'require_full_flashcard_view': requireFullFlashcardView ? 1 : 0,
+      'is_completed': isCompleted ? 1 : 0,
     };
   }
 
@@ -29,6 +32,7 @@ class Wordlist {
       createdAt: DateTime.parse(map['created_at'] as String),
       requireFullFlashcardView:
           (map['require_full_flashcard_view'] as int? ?? 0) == 1,
+      isCompleted: (map['is_completed'] as int? ?? 0) == 1,
       words: words ?? [],
     );
   }
@@ -38,6 +42,7 @@ class Wordlist {
     String? name,
     DateTime? createdAt,
     bool? requireFullFlashcardView,
+    bool? isCompleted,
     List<String>? words,
   }) {
     return Wordlist(
@@ -46,6 +51,7 @@ class Wordlist {
       createdAt: createdAt ?? this.createdAt,
       requireFullFlashcardView:
           requireFullFlashcardView ?? this.requireFullFlashcardView,
+      isCompleted: isCompleted ?? this.isCompleted,
       words: words ?? this.words,
     );
   }

@@ -18,6 +18,7 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
   final List<String> _words = [];
   bool _isLoaded = false;
   bool _requireFullFlashcardView = false;
+  bool _isCompleted = false;
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
         _words.addAll(wordlist.words);
         _words.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         _requireFullFlashcardView = wordlist.requireFullFlashcardView;
+        _isCompleted = wordlist.isCompleted;
         _isLoaded = true;
       });
     }
@@ -65,6 +67,7 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
       _words,
       requireFullFlashcardView: _requireFullFlashcardView,
     );
+    await provider.setCompleted(widget.wordlistId, _isCompleted);
 
     if (!mounted) return;
 
@@ -120,6 +123,17 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
               value: _requireFullFlashcardView,
               onChanged: (value) =>
                   setState(() => _requireFullFlashcardView = value),
+            ),
+            Card(
+              margin: EdgeInsets.zero,
+              child: SwitchListTile(
+                title: const Text('Mark as completed'),
+                subtitle: const Text(
+                  'Shows a "Completed" pill next to this wordlist',
+                ),
+                value: _isCompleted,
+                onChanged: (value) => setState(() => _isCompleted = value),
+              ),
             ),
             const SizedBox(height: 16),
             Row(
