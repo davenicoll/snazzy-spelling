@@ -17,6 +17,7 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
   final FocusNode _wordFocusNode = FocusNode();
   final List<String> _words = [];
   bool _isLoaded = false;
+  bool _requireFullFlashcardView = false;
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
         _nameController.text = wordlist.name;
         _words.addAll(wordlist.words);
         _words.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        _requireFullFlashcardView = wordlist.requireFullFlashcardView;
         _isLoaded = true;
       });
     }
@@ -57,7 +59,12 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
     if (_nameController.text.trim().isEmpty || _words.isEmpty) return;
 
     final provider = context.read<WordlistProvider>();
-    await provider.update(widget.wordlistId, _nameController.text.trim(), _words);
+    await provider.update(
+      widget.wordlistId,
+      _nameController.text.trim(),
+      _words,
+      requireFullFlashcardView: _requireFullFlashcardView,
+    );
 
     if (!mounted) return;
 
@@ -102,6 +109,17 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
                 border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Require all flashcards viewed before test'),
+              subtitle: const Text(
+                'Disables the test until every word has been viewed as a flashcard.',
+              ),
+              value: _requireFullFlashcardView,
+              onChanged: (value) =>
+                  setState(() => _requireFullFlashcardView = value),
             ),
             const SizedBox(height: 16),
             Row(

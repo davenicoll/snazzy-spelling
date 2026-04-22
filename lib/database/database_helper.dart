@@ -29,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -50,7 +50,8 @@ class DatabaseHelper {
       CREATE TABLE wordlists (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        require_full_flashcard_view INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -85,6 +86,16 @@ class DatabaseHelper {
         FOREIGN KEY (session_id) REFERENCES test_sessions(id) ON DELETE CASCADE
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE flashcard_views (
+        wordlist_id INTEGER NOT NULL,
+        word TEXT NOT NULL,
+        viewed_at TEXT NOT NULL,
+        PRIMARY KEY (wordlist_id, word),
+        FOREIGN KEY (wordlist_id) REFERENCES wordlists(id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -92,6 +103,20 @@ class DatabaseHelper {
       await db.execute(
         'ALTER TABLE test_results ADD COLUMN first_attempt TEXT',
       );
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        'ALTER TABLE wordlists ADD COLUMN require_full_flashcard_view INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute('''
+        CREATE TABLE flashcard_views (
+          wordlist_id INTEGER NOT NULL,
+          word TEXT NOT NULL,
+          viewed_at TEXT NOT NULL,
+          PRIMARY KEY (wordlist_id, word),
+          FOREIGN KEY (wordlist_id) REFERENCES wordlists(id) ON DELETE CASCADE
+        )
+      ''');
     }
   }
 }

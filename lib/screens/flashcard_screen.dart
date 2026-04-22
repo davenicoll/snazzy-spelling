@@ -42,6 +42,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       setState(() {
         _wordlist = wordlist.copyWith(words: sorted);
       });
+      // The first card is on screen from render — count it as viewed, and
+      // preload the viewed-words cache so the wordlist view screen's gate
+      // updates when this screen is popped.
+      if (sorted.isNotEmpty) {
+        await provider.recordFlashcardView(widget.wordlistId, sorted[0]);
+      } else {
+        await provider.loadViewedWords(widget.wordlistId);
+      }
     }
   }
 
@@ -124,6 +132,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                 _sfx.play('sounds/swipe.mp3');
               }
               setState(() => _currentIndex = index);
+              // Record the now-visible word as viewed. The provider
+              // deduplicates so rapid swiping doesn't thrash the DB.
+              context.read<WordlistProvider>().recordFlashcardView(
+                    widget.wordlistId,
+                    words[index],
+                  );
             },
             itemBuilder: (context, index) {
               return WordCard(
