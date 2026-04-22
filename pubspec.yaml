@@ -1,7 +1,7 @@
 name: snazzy_spelling
 description: "Snazzy Spelling - A spelling practice app for children"
 publish_to: 'none'
-version: 1.0.8+9
+version: 1.0.9+10
 
 environment:
   sdk: ^3.10.4
