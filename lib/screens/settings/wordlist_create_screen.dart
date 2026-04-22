@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/wordlist_provider.dart';
 
@@ -13,33 +12,19 @@ class WordlistCreateScreen extends StatefulWidget {
 }
 
 class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
-  late final TextEditingController _nameController;
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _wordController = TextEditingController();
   final List<String> _words = [];
   final FocusNode _wordFocusNode = FocusNode();
+  final FocusNode _nameFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    final day = now.day;
-    final suffix = _daySuffix(day);
-    final formatted = DateFormat("EEEE, d'$suffix' MMMM, yyyy").format(now);
-    _nameController = TextEditingController(text: formatted);
-  }
-
-  String _daySuffix(int day) {
-    if (day >= 11 && day <= 13) return 'th';
-    switch (day % 10) {
-      case 1:
-        return 'st';
-      case 2:
-        return 'nd';
-      case 3:
-        return 'rd';
-      default:
-        return 'th';
-    }
+    // Focus the name field so the user can start typing immediately.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _nameFocusNode.requestFocus();
+    });
   }
 
   void _addWord() {
@@ -109,6 +94,7 @@ class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
     _nameController.dispose();
     _wordController.dispose();
     _wordFocusNode.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 
@@ -128,9 +114,11 @@ class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
             // Name field
             TextField(
               controller: _nameController,
+              focusNode: _nameFocusNode,
               maxLength: 255,
               decoration: const InputDecoration(
                 labelText: 'Wordlist Name',
+                hintText: 'Wordlist title',
                 border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
