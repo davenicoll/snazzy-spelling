@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/wordlist_provider.dart';
 import '../utils/sfx_player.dart';
+import '../widgets/completed_pill.dart';
 import '../widgets/sort_controls.dart';
 import 'package:intl/intl.dart';
 
@@ -11,29 +12,6 @@ class MainScreen extends StatefulWidget {
 
   @override
   State<MainScreen> createState() => _MainScreenState();
-}
-
-class _CompletedPill extends StatelessWidget {
-  const _CompletedPill();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        'Completed',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: scheme.onSecondaryContainer,
-              fontWeight: FontWeight.w600,
-            ),
-      ),
-    );
-  }
 }
 
 class _MainScreenState extends State<MainScreen> {
@@ -150,7 +128,7 @@ class _MainScreenState extends State<MainScreen> {
                             ),
                             if (wordlist.isCompleted) ...[
                               const SizedBox(width: 8),
-                              const _CompletedPill(),
+                              const CompletedPill(),
                             ],
                           ],
                         ),

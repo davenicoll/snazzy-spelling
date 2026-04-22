@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../models/color_theme.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/wordlist_provider.dart';
+import '../../widgets/completed_pill.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -189,7 +190,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   ...provider.wordlists.map((wordlist) => Card(
                         child: ListTile(
-                          title: Text(wordlist.name),
+                          title: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  wordlist.name,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (wordlist.isCompleted) ...[
+                                const SizedBox(width: 8),
+                                const CompletedPill(),
+                              ],
+                            ],
+                          ),
                           subtitle: Text(
                             '${wordlist.words.length} word${wordlist.words.length == 1 ? '' : 's'}',
                           ),
