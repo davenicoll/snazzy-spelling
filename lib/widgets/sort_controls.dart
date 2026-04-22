@@ -59,7 +59,16 @@ class SortControls extends StatelessWidget {
               onSelected: onHideCompletedChanged,
               avatar: hideCompleted
                   ? const Icon(Icons.check_box, size: 18)
-                  : const Icon(Icons.check_box_outline_blank, size: 18),
+                  : Icon(
+                      Icons.check_box_outline_blank,
+                      size: 18,
+                      // Route the unchecked-state accent through the theme's
+                      // tertiary token so each palette (Star Brawls orange,
+                      // Cell Super pink, Snazzy muted green) drives the icon
+                      // colour instead of the default chip styling leaking
+                      // whichever hue `primary` happens to be.
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
               showCheckmark: false,
             ),
           ],

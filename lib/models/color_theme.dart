@@ -45,11 +45,20 @@ enum ColorTheme {
           return base.copyWith(
             primary: const Color(0xFF6DD528),
             onPrimary: Colors.black,
-            tertiary: const Color(0xFF6DD528),
+            // Softer, less-saturated green than the seed so accent usages
+            // (e.g. the "hide completed" unchecked icon, the Check key) read
+            // as on-palette without being aggressive on a dark surface.
+            tertiary: const Color(0xFF9FD48A),
             onTertiary: Colors.black,
           );
         }
-        return base;
+        return base.copyWith(
+          // Deeper, lower-chroma green for the light palette — same intent as
+          // the dark override: on-brand green without the over-saturated
+          // seed-derived shade the default `fromSeed` tertiary picks.
+          tertiary: const Color(0xFF4E7A3A),
+          onTertiary: Colors.white,
+        );
 
       case ColorTheme.starBrawls:
         if (brightness == Brightness.dark) {
