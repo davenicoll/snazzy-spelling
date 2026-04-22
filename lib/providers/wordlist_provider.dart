@@ -1,40 +1,46 @@
 import 'package:flutter/foundation.dart';
 import '../models/wordlist.dart';
+import '../repositories/settings_repository.dart';
 import '../repositories/wordlist_repository.dart';
 
 enum SortField { alphabetical, createdAt }
 enum SortDirection { ascending, descending }
 
+/// Settings key used to persist the main-list "Hide completed" preference.
+/// Shared with tests so the storage key is asserted, not hard-coded.
+const String kHideCompletedSettingKey = 'wordlist:hideCompleted';
+
 class WordlistProvider extends ChangeNotifier {
-  final WordlistRepository _repo = WordlistRepository();
+  final WordlistRepository _repo;
+  final SettingsRepository _settings;
   List<Wordlist> _wordlists = [];
   SortField _sortField = SortField.createdAt;
   SortDirection _sortDirection = SortDirection.descending;
+  bool _hideCompleted = true;
 
   /// Cache of viewed-word sets keyed by wordlist id. Screens read from this
   /// and listen for changes so the "test" button can unlock without reload.
   final Map<int, Set<String>> _viewedWords = {};
 
-  List<Wordlist> get wordlists => _sortedWordlists();
+  WordlistProvider({
+    WordlistRepository? repository,
+    SettingsRepository? settingsRepository,
+  })  : _repo = repository ?? WordlistRepository(),
+        _settings = settingsRepository ?? SettingsRepository();
+
+  List<Wordlist> get wordlists =>
+      filterAndSortWordlists(_wordlists, _sortField, _sortDirection,
+          hideCompleted: _hideCompleted);
   SortField get sortField => _sortField;
   SortDirection get sortDirection => _sortDirection;
-  bool get hasWordlists => _wordlists.isNotEmpty;
+  bool get hideCompleted => _hideCompleted;
 
-  List<Wordlist> _sortedWordlists() {
-    final sorted = List<Wordlist>.from(_wordlists);
-    sorted.sort((a, b) {
-      int comparison;
-      if (_sortField == SortField.alphabetical) {
-        comparison = a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      } else {
-        comparison = a.createdAt.compareTo(b.createdAt);
-      }
-      return _sortDirection == SortDirection.ascending
-          ? comparison
-          : -comparison;
-    });
-    return sorted;
-  }
+  /// True when at least one wordlist exists in the backing store, regardless
+  /// of whether the current filter hides all of them. Used by the main
+  /// screen to decide between the empty-state and the list UI — we don't
+  /// want the "No wordlists yet" placeholder to flash just because the user
+  /// has hidden completed ones.
+  bool get hasWordlists => _wordlists.isNotEmpty;
 
   void toggleSort(SortField field) {
     if (_sortField == field) {
@@ -48,8 +54,21 @@ class WordlistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setHideCompleted(bool value) async {
+    if (_hideCompleted == value) return;
+    _hideCompleted = value;
+    notifyListeners();
+    await _settings.setSetting(
+      kHideCompletedSettingKey,
+      value.toString(),
+    );
+  }
+
   Future<void> load() async {
     _wordlists = await _repo.getAll();
+    final stored = await _settings.getSetting(kHideCompletedSettingKey);
+    // Default to hiding completed when nothing has been stored yet.
+    _hideCompleted = stored == null ? true : stored != 'false';
     notifyListeners();
   }
 
@@ -109,4 +128,27 @@ class WordlistProvider extends ChangeNotifier {
     _viewedWords[wordlistId] = existing;
     notifyListeners();
   }
+}
+
+/// Pure function: apply the hide-completed filter then sort. Exposed for
+/// direct unit testing without needing a provider or a database.
+List<Wordlist> filterAndSortWordlists(
+  List<Wordlist> source,
+  SortField field,
+  SortDirection direction, {
+  required bool hideCompleted,
+}) {
+  final filtered = hideCompleted
+      ? source.where((w) => !w.isCompleted).toList()
+      : List<Wordlist>.from(source);
+  filtered.sort((a, b) {
+    final int comparison;
+    if (field == SortField.alphabetical) {
+      comparison = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    } else {
+      comparison = a.createdAt.compareTo(b.createdAt);
+    }
+    return direction == SortDirection.ascending ? comparison : -comparison;
+  });
+  return filtered;
 }

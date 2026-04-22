@@ -5,12 +5,16 @@ class SortControls extends StatelessWidget {
   final SortField sortField;
   final SortDirection sortDirection;
   final ValueChanged<SortField> onToggleSort;
+  final bool hideCompleted;
+  final ValueChanged<bool> onHideCompletedChanged;
 
   const SortControls({
     super.key,
     required this.sortField,
     required this.sortDirection,
     required this.onToggleSort,
+    required this.hideCompleted,
+    required this.onHideCompletedChanged,
   });
 
   @override
@@ -20,36 +24,46 @@ class SortControls extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-        children: [
-          Text(
-            'Sort by:',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
-                ),
-          ),
-          const SizedBox(width: 8),
-          _SortChip(
-            label: 'Name',
-            isSelected: sortField == SortField.alphabetical,
-            direction: sortField == SortField.alphabetical
-                ? sortDirection
-                : null,
-            onTap: () => onToggleSort(SortField.alphabetical),
-          ),
-          const SizedBox(width: 8),
-          _SortChip(
-            label: 'Date',
-            isSelected: sortField == SortField.createdAt,
-            direction: sortField == SortField.createdAt
-                ? sortDirection
-                : null,
-            onTap: () => onToggleSort(SortField.createdAt),
-          ),
-        ],
-      ),
+          children: [
+            Text(
+              'Sort by:',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6),
+                  ),
+            ),
+            const SizedBox(width: 8),
+            _SortChip(
+              label: 'Name',
+              isSelected: sortField == SortField.alphabetical,
+              direction: sortField == SortField.alphabetical
+                  ? sortDirection
+                  : null,
+              onTap: () => onToggleSort(SortField.alphabetical),
+            ),
+            const SizedBox(width: 8),
+            _SortChip(
+              label: 'Date',
+              isSelected: sortField == SortField.createdAt,
+              direction:
+                  sortField == SortField.createdAt ? sortDirection : null,
+              onTap: () => onToggleSort(SortField.createdAt),
+            ),
+            const SizedBox(width: 16),
+            FilterChip(
+              key: const Key('hide-completed-chip'),
+              label: const Text('Hide completed'),
+              selected: hideCompleted,
+              onSelected: onHideCompletedChanged,
+              avatar: hideCompleted
+                  ? const Icon(Icons.check_box, size: 18)
+                  : const Icon(Icons.check_box_outline_blank, size: 18),
+              showCheckmark: false,
+            ),
+          ],
+        ),
       ),
     );
   }
