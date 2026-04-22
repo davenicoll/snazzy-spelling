@@ -9,12 +9,14 @@ class SettingsProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   ColorTheme _colorTheme = ColorTheme.snazzy;
   bool _playSounds = true;
+  bool _requireFullFlashcardView = false;
 
   bool get hasPinSet => _hasPinSet;
   bool get isLoaded => _isLoaded;
   ThemeMode get themeMode => _themeMode;
   ColorTheme get colorTheme => _colorTheme;
   bool get playSounds => _playSounds;
+  bool get requireFullFlashcardView => _requireFullFlashcardView;
 
   Future<void> load() async {
     _hasPinSet = await _repo.hasPinSet();
@@ -24,6 +26,9 @@ class SettingsProvider extends ChangeNotifier {
     _colorTheme = ColorTheme.fromStorageString(colorThemeString);
     final playSoundsString = await _repo.getSetting('play_sounds');
     _playSounds = playSoundsString != 'false';
+    final requireFullFlashcardViewString =
+        await _repo.getSetting('require_full_flashcard_view');
+    _requireFullFlashcardView = requireFullFlashcardViewString == 'true';
     _isLoaded = true;
     notifyListeners();
   }
@@ -52,6 +57,12 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setPlaySounds(bool value) async {
     await _repo.setSetting('play_sounds', value.toString());
     _playSounds = value;
+    notifyListeners();
+  }
+
+  Future<void> setRequireFullFlashcardView(bool value) async {
+    await _repo.setSetting('require_full_flashcard_view', value.toString());
+    _requireFullFlashcardView = value;
     notifyListeners();
   }
 

@@ -17,7 +17,6 @@ class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
   final List<String> _words = [];
   final FocusNode _wordFocusNode = FocusNode();
   final FocusNode _nameFocusNode = FocusNode();
-  bool _requireFullFlashcardView = false;
 
   @override
   void initState() {
@@ -52,7 +51,6 @@ class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
     await provider.create(
       _nameController.text.trim(),
       _words,
-      requireFullFlashcardView: _requireFullFlashcardView,
     );
 
     if (!mounted) return;
@@ -127,17 +125,6 @@ class _WordlistCreateScreenState extends State<WordlistCreateScreen> {
                 border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Require all flashcards viewed before test'),
-              subtitle: const Text(
-                'Disables the test until every word has been viewed as a flashcard.',
-              ),
-              value: _requireFullFlashcardView,
-              onChanged: (value) =>
-                  setState(() => _requireFullFlashcardView = value),
             ),
             const SizedBox(height: 16),
             // Add word field

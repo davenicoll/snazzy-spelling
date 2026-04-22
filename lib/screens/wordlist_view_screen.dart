@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/wordlist.dart';
+import '../providers/settings_provider.dart';
 import '../providers/wordlist_provider.dart';
 
 class WordlistViewScreen extends StatefulWidget {
@@ -49,10 +50,13 @@ class _WordlistViewScreenState extends State<WordlistViewScreen> {
           constraints: const BoxConstraints(maxWidth: 400),
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Consumer<WordlistProvider>(
-              builder: (context, provider, _) {
+            child: Consumer2<WordlistProvider, SettingsProvider>(
+              builder: (context, provider, settings, _) {
                 final viewed = provider.viewedWords(widget.wordlistId);
-                final gated = _wordlist!.isTestGated(viewed);
+                final gated = _wordlist!.isTestGated(
+                  requireFullFlashcardView: settings.requireFullFlashcardView,
+                  viewedWords: viewed,
+                );
                 final remaining = _wordlist!.words
                     .where((w) => !viewed.contains(w))
                     .length;

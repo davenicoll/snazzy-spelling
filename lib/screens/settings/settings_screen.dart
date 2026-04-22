@@ -159,12 +159,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          const SizedBox(height: 32),
+          // Text-to-speech section
+          Text(
+            'Text-to-speech',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Consumer<SettingsProvider>(
+            builder: (context, settings, _) {
+              return Card(
+                child: SwitchListTile(
+                  secondary: const Icon(Icons.style_outlined),
+                  title: const Text(
+                    'Require all flashcards viewed before test',
+                  ),
+                  subtitle: const Text(
+                    'Disables the test on every wordlist until each word '
+                    'has been viewed as a flashcard.',
+                  ),
+                  value: settings.requireFullFlashcardView,
+                  onChanged: (value) =>
+                      settings.setRequireFullFlashcardView(value),
+                ),
+              );
+            },
+          ),
           if (Platform.isAndroid) ...[
             const SizedBox(height: 8),
             Card(
               child: ListTile(
                 leading: const Icon(Icons.record_voice_over_outlined),
-                title: const Text('Text-to-Speech Settings'),
+                title: const Text('System TTS Settings'),
                 subtitle: const Text('Change voice, speed, and language'),
                 trailing: const Icon(Icons.open_in_new),
                 onTap: () {
