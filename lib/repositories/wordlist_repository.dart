@@ -1,3 +1,5 @@
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 import '../database/database_helper.dart';
 import '../models/wordlist.dart';
 
@@ -47,13 +49,18 @@ class WordlistRepository {
     );
   }
 
-  Future<Wordlist> create(String name, List<String> words) async {
+  Future<Wordlist> create(
+    String name,
+    List<String> words, {
+    bool requireFullFlashcardView = false,
+  }) async {
     final db = await _dbHelper.database;
     final now = DateTime.now();
 
     final id = await db.insert('wordlists', {
       'name': name,
       'created_at': now.toIso8601String(),
+      'require_full_flashcard_view': requireFullFlashcardView ? 1 : 0,
     });
 
     for (final word in words) {
@@ -67,21 +74,33 @@ class WordlistRepository {
       id: id,
       name: name,
       createdAt: now,
+      requireFullFlashcardView: requireFullFlashcardView,
       words: words.map((w) => w.trim()).toList(),
     );
   }
 
-  Future<void> update(int id, String name, List<String> words) async {
+  Future<void> update(
+    int id,
+    String name,
+    List<String> words, {
+    bool requireFullFlashcardView = false,
+  }) async {
     final db = await _dbHelper.database;
 
     await db.update(
       'wordlists',
-      {'name': name},
+      {
+        'name': name,
+        'require_full_flashcard_view': requireFullFlashcardView ? 1 : 0,
+      },
       where: 'id = ?',
       whereArgs: [id],
     );
 
-    // Replace all words
+    // Replace all words. Flashcard-view progress is keyed by
+    // (wordlist_id, word), so views for words removed from the list become
+    // inert but remain on disk — if an admin re-adds a word with the same
+    // spelling the prior view still counts.
     await db.delete('words', where: 'wordlist_id = ?', whereArgs: [id]);
     for (final word in words) {
       await db.insert('words', {
@@ -93,7 +112,32 @@ class WordlistRepository {
 
   Future<void> delete(int id) async {
     final db = await _dbHelper.database;
-    // CASCADE will handle words, test_sessions, and test_results
+    // CASCADE will handle words, test_sessions, test_results, and
+    // flashcard_views.
     await db.delete('wordlists', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<Set<String>> getViewedWords(int wordlistId) async {
+    final db = await _dbHelper.database;
+    final rows = await db.query(
+      'flashcard_views',
+      columns: ['word'],
+      where: 'wordlist_id = ?',
+      whereArgs: [wordlistId],
+    );
+    return rows.map((r) => r['word'] as String).toSet();
+  }
+
+  Future<void> recordView(int wordlistId, String word) async {
+    final db = await _dbHelper.database;
+    await db.insert(
+      'flashcard_views',
+      {
+        'wordlist_id': wordlistId,
+        'word': word,
+        'viewed_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 }

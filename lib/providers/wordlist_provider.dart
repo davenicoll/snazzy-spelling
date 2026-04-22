@@ -11,6 +11,10 @@ class WordlistProvider extends ChangeNotifier {
   SortField _sortField = SortField.createdAt;
   SortDirection _sortDirection = SortDirection.descending;
 
+  /// Cache of viewed-word sets keyed by wordlist id. Screens read from this
+  /// and listen for changes so the "test" button can unlock without reload.
+  final Map<int, Set<String>> _viewedWords = {};
+
   List<Wordlist> get wordlists => _sortedWordlists();
   SortField get sortField => _sortField;
   SortDirection get sortDirection => _sortDirection;
@@ -49,25 +53,69 @@ class WordlistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Wordlist> create(String name, List<String> words) async {
-    final wordlist = await _repo.create(name, words);
+  Future<Wordlist> create(
+    String name,
+    List<String> words, {
+    bool requireFullFlashcardView = false,
+  }) async {
+    final wordlist = await _repo.create(
+      name,
+      words,
+      requireFullFlashcardView: requireFullFlashcardView,
+    );
     _wordlists.add(wordlist);
     notifyListeners();
     return wordlist;
   }
 
-  Future<void> update(int id, String name, List<String> words) async {
-    await _repo.update(id, name, words);
+  Future<void> update(
+    int id,
+    String name,
+    List<String> words, {
+    bool requireFullFlashcardView = false,
+  }) async {
+    await _repo.update(
+      id,
+      name,
+      words,
+      requireFullFlashcardView: requireFullFlashcardView,
+    );
     await load();
   }
 
   Future<void> delete(int id) async {
     await _repo.delete(id);
     _wordlists.removeWhere((w) => w.id == id);
+    _viewedWords.remove(id);
     notifyListeners();
   }
 
   Future<Wordlist?> getById(int id) async {
     return await _repo.getById(id);
+  }
+
+  /// Returns the cached set of viewed words for a wordlist, or an empty set
+  /// if nothing has been loaded yet. Callers that need the up-to-date value
+  /// should call [loadViewedWords] first.
+  Set<String> viewedWords(int wordlistId) =>
+      _viewedWords[wordlistId] ?? const <String>{};
+
+  Future<Set<String>> loadViewedWords(int wordlistId) async {
+    final viewed = await _repo.getViewedWords(wordlistId);
+    _viewedWords[wordlistId] = viewed;
+    notifyListeners();
+    return viewed;
+  }
+
+  Future<void> recordFlashcardView(int wordlistId, String word) async {
+    final existing = _viewedWords[wordlistId] ?? <String>{};
+    if (existing.contains(word)) {
+      // Already recorded — no state change, no DB churn.
+      return;
+    }
+    await _repo.recordView(wordlistId, word);
+    existing.add(word);
+    _viewedWords[wordlistId] = existing;
+    notifyListeners();
   }
 }
