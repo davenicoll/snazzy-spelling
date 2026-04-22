@@ -5,41 +5,63 @@ void main() {
   group('Wordlist.isTestGated', () {
     final createdAt = DateTime(2026, 1, 1);
 
-    test('returns false when the require-view option is off', () {
-      final wl = Wordlist(
-        id: 1,
-        name: 'list',
-        createdAt: createdAt,
-        requireFullFlashcardView: false,
-        words: const ['apple', 'banana'],
+    Wordlist makeList(List<String> words) => Wordlist(
+          id: 1,
+          name: 'list',
+          createdAt: createdAt,
+          words: words,
+        );
+
+    test('returns false when the global flag is off', () {
+      final wl = makeList(const ['apple', 'banana']);
+      expect(
+        wl.isTestGated(
+          requireFullFlashcardView: false,
+          viewedWords: const {},
+        ),
+        isFalse,
       );
-      expect(wl.isTestGated(const {}), isFalse);
-      expect(wl.isTestGated(const {'apple'}), isFalse);
+      expect(
+        wl.isTestGated(
+          requireFullFlashcardView: false,
+          viewedWords: const {'apple'},
+        ),
+        isFalse,
+      );
     });
 
-    test('returns true when the option is on and some words are unviewed', () {
-      final wl = Wordlist(
-        id: 1,
-        name: 'list',
-        createdAt: createdAt,
-        requireFullFlashcardView: true,
-        words: const ['apple', 'banana', 'cherry'],
+    test('returns true when the flag is on and some words are unviewed', () {
+      final wl = makeList(const ['apple', 'banana', 'cherry']);
+      expect(
+        wl.isTestGated(
+          requireFullFlashcardView: true,
+          viewedWords: const {},
+        ),
+        isTrue,
       );
-      expect(wl.isTestGated(const {}), isTrue);
-      expect(wl.isTestGated(const {'apple'}), isTrue);
-      expect(wl.isTestGated(const {'apple', 'banana'}), isTrue);
+      expect(
+        wl.isTestGated(
+          requireFullFlashcardView: true,
+          viewedWords: const {'apple'},
+        ),
+        isTrue,
+      );
+      expect(
+        wl.isTestGated(
+          requireFullFlashcardView: true,
+          viewedWords: const {'apple', 'banana'},
+        ),
+        isTrue,
+      );
     });
 
     test('returns false once every word has been viewed', () {
-      final wl = Wordlist(
-        id: 1,
-        name: 'list',
-        createdAt: createdAt,
-        requireFullFlashcardView: true,
-        words: const ['apple', 'banana', 'cherry'],
-      );
+      final wl = makeList(const ['apple', 'banana', 'cherry']);
       expect(
-        wl.isTestGated(const {'apple', 'banana', 'cherry'}),
+        wl.isTestGated(
+          requireFullFlashcardView: true,
+          viewedWords: const {'apple', 'banana', 'cherry'},
+        ),
         isFalse,
       );
     });
@@ -47,28 +69,25 @@ void main() {
     test('extra viewed entries do not trip the gate', () {
       // Words that were once in the list but have since been removed may
       // still appear in the viewed set. They should not block anything.
-      final wl = Wordlist(
-        id: 1,
-        name: 'list',
-        createdAt: createdAt,
-        requireFullFlashcardView: true,
-        words: const ['apple', 'banana'],
-      );
+      final wl = makeList(const ['apple', 'banana']);
       expect(
-        wl.isTestGated(const {'apple', 'banana', 'stale-word'}),
+        wl.isTestGated(
+          requireFullFlashcardView: true,
+          viewedWords: const {'apple', 'banana', 'stale-word'},
+        ),
         isFalse,
       );
     });
 
     test('an empty wordlist is not gated', () {
-      final wl = Wordlist(
-        id: 1,
-        name: 'list',
-        createdAt: createdAt,
-        requireFullFlashcardView: true,
-        words: const [],
+      final wl = makeList(const []);
+      expect(
+        wl.isTestGated(
+          requireFullFlashcardView: true,
+          viewedWords: const {},
+        ),
+        isFalse,
       );
-      expect(wl.isTestGated(const {}), isFalse);
     });
   });
 }

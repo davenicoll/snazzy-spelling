@@ -53,33 +53,15 @@ class WordlistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Wordlist> create(
-    String name,
-    List<String> words, {
-    bool requireFullFlashcardView = false,
-  }) async {
-    final wordlist = await _repo.create(
-      name,
-      words,
-      requireFullFlashcardView: requireFullFlashcardView,
-    );
+  Future<Wordlist> create(String name, List<String> words) async {
+    final wordlist = await _repo.create(name, words);
     _wordlists.add(wordlist);
     notifyListeners();
     return wordlist;
   }
 
-  Future<void> update(
-    int id,
-    String name,
-    List<String> words, {
-    bool requireFullFlashcardView = false,
-  }) async {
-    await _repo.update(
-      id,
-      name,
-      words,
-      requireFullFlashcardView: requireFullFlashcardView,
-    );
+  Future<void> update(int id, String name, List<String> words) async {
+    await _repo.update(id, name, words);
     await load();
   }
 

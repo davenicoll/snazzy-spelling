@@ -49,18 +49,16 @@ class WordlistRepository {
     );
   }
 
-  Future<Wordlist> create(
-    String name,
-    List<String> words, {
-    bool requireFullFlashcardView = false,
-  }) async {
+  Future<Wordlist> create(String name, List<String> words) async {
     final db = await _dbHelper.database;
     final now = DateTime.now();
 
+    // NOTE: `require_full_flashcard_view` column is preserved in schema for
+    // backward compat but is no longer written to — the gate is a global
+    // setting now. The column will fall back to its `DEFAULT 0`.
     final id = await db.insert('wordlists', {
       'name': name,
       'created_at': now.toIso8601String(),
-      'require_full_flashcard_view': requireFullFlashcardView ? 1 : 0,
     });
 
     for (final word in words) {
@@ -74,25 +72,16 @@ class WordlistRepository {
       id: id,
       name: name,
       createdAt: now,
-      requireFullFlashcardView: requireFullFlashcardView,
       words: words.map((w) => w.trim()).toList(),
     );
   }
 
-  Future<void> update(
-    int id,
-    String name,
-    List<String> words, {
-    bool requireFullFlashcardView = false,
-  }) async {
+  Future<void> update(int id, String name, List<String> words) async {
     final db = await _dbHelper.database;
 
     await db.update(
       'wordlists',
-      {
-        'name': name,
-        'require_full_flashcard_view': requireFullFlashcardView ? 1 : 0,
-      },
+      {'name': name},
       where: 'id = ?',
       whereArgs: [id],
     );
