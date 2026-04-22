@@ -104,9 +104,16 @@ class _MainScreenState extends State<MainScreen> {
                 sortField: provider.sortField,
                 sortDirection: provider.sortDirection,
                 onToggleSort: provider.toggleSort,
+                hideCompleted: provider.hideCompleted,
+                onHideCompletedChanged: provider.setHideCompleted,
               ),
               Expanded(
-                child: ListView.builder(
+                child: provider.wordlists.isEmpty
+                    ? _AllHiddenNotice(
+                        onShowCompleted: () =>
+                            provider.setHideCompleted(false),
+                      )
+                    : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: provider.wordlists.length,
                   itemBuilder: (context, index) {
@@ -151,6 +158,45 @@ class _MainScreenState extends State<MainScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _AllHiddenNotice extends StatelessWidget {
+  final VoidCallback onShowCompleted;
+
+  const _AllHiddenNotice({required this.onShowCompleted});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.filter_alt_outlined,
+              size: 48,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'All wordlists are completed',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: onShowCompleted,
+              child: const Text('Show completed'),
+            ),
+          ],
+        ),
       ),
     );
   }
