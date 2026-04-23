@@ -214,9 +214,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           Consumer<WordlistProvider>(
             builder: (context, provider, _) {
+              // Admin settings intentionally ignores the main-screen
+              // "hide completed" preference and sort controls — this list
+              // is always every wordlist, newest first, for reliable
+              // management.
+              final adminWordlists = provider.allWordlistsByCreatedDesc;
               return Column(
                 children: [
-                  ...provider.wordlists.map((wordlist) => Card(
+                  ...adminWordlists.map((wordlist) => Card(
                         child: ListTile(
                           title: Row(
                             children: [

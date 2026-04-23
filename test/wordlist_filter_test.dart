@@ -73,6 +73,57 @@ void main() {
     });
   });
 
+  group('admin settings wordlist view (allWordlistsByCreatedDesc params)', () {
+    // `WordlistProvider.allWordlistsByCreatedDesc` is a thin wrapper that
+    // delegates to `filterAndSortWordlists` with `SortField.createdAt`,
+    // `SortDirection.descending`, and `hideCompleted: false`. These tests
+    // pin that contract directly so the admin screen can't regress to the
+    // main-screen filter/sort state.
+    final mixed = [
+      Wordlist(
+        id: 1,
+        name: 'Alpha',
+        createdAt: DateTime(2026, 1, 1),
+        isCompleted: true,
+        words: const ['x'],
+      ),
+      Wordlist(
+        id: 2,
+        name: 'Bravo',
+        createdAt: DateTime(2026, 2, 1),
+        words: const ['x'],
+      ),
+      Wordlist(
+        id: 3,
+        name: 'Charlie',
+        createdAt: DateTime(2026, 3, 1),
+        isCompleted: true,
+        words: const ['x'],
+      ),
+    ];
+
+    test('returns every wordlist sorted by createdAt desc', () {
+      final result = filterAndSortWordlists(
+        mixed,
+        SortField.createdAt,
+        SortDirection.descending,
+        hideCompleted: false,
+      );
+      expect(result.map((w) => w.name).toList(),
+          ['Charlie', 'Bravo', 'Alpha']);
+    });
+
+    test('completed wordlists are retained', () {
+      final result = filterAndSortWordlists(
+        mixed,
+        SortField.createdAt,
+        SortDirection.descending,
+        hideCompleted: false,
+      );
+      expect(result.where((w) => w.isCompleted).length, 2);
+    });
+  });
+
   test('kHideCompletedSettingKey is stable', () {
     // Stability matters because it's what users' existing stored preferences
     // are keyed on. Changing it silently resets every install.
