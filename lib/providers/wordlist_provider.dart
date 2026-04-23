@@ -31,6 +31,18 @@ class WordlistProvider extends ChangeNotifier {
   List<Wordlist> get wordlists =>
       filterAndSortWordlists(_wordlists, _sortField, _sortDirection,
           hideCompleted: _hideCompleted);
+
+  /// Admin settings surface: always shows every wordlist, newest first.
+  /// Intentionally ignores the main-screen sort state and the
+  /// "hide completed" preference — the admin list needs to be a
+  /// reliable, stable management view.
+  List<Wordlist> get allWordlistsByCreatedDesc =>
+      filterAndSortWordlists(
+        _wordlists,
+        SortField.createdAt,
+        SortDirection.descending,
+        hideCompleted: false,
+      );
   SortField get sortField => _sortField;
   SortDirection get sortDirection => _sortDirection;
   bool get hideCompleted => _hideCompleted;
