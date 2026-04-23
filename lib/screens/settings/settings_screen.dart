@@ -1,11 +1,15 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:android_intent_plus/android_intent.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/color_theme.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/wordlist_provider.dart';
+import '../../services/backup_service.dart';
 import '../../widgets/completed_pill.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -289,6 +293,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const SizedBox(height: 32),
+          // Backup & Restore section
+          Text(
+            'Backup & Restore',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.save_alt),
+              title: const Text('Backup to file'),
+              onTap: _handleBackup,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.restore),
+              title: const Text('Restore from file'),
+              onTap: _handleRestore,
+            ),
+          ),
+          const SizedBox(height: 32),
           // PIN section
           Text(
             'Security',
@@ -306,6 +334,151 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.of(context).pushNamed('/settings/change-pin');
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleBackup() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final bytes = await BackupService().exportToBytes();
+      final timestamp = DateFormat('yyyyMMdd-HHmm').format(DateTime.now());
+      final fileName = 'snazzy-spelling-backup-$timestamp.ssbk';
+
+      String? savedPath;
+      try {
+        savedPath = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save backup',
+          fileName: fileName,
+          type: FileType.any,
+          bytes: bytes,
+        );
+      } on UnimplementedError {
+        // Desktop/web fallback: saveFile may not accept bytes directly — ask
+        // for a path, then write ourselves.
+        savedPath = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save backup',
+          fileName: fileName,
+          type: FileType.any,
+        );
+        if (savedPath != null) {
+          await File(savedPath).writeAsBytes(bytes, flush: true);
+        }
+      }
+
+      if (!mounted) return;
+      if (savedPath == null) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Backup cancelled.')),
+        );
+      } else {
+        // On Android with bytes provided, saveFile returns the chosen URI
+        // and the plugin has already written the bytes — no extra work here.
+        // On desktop the File().writeAsBytes above handled it.
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Backup saved.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      await _showErrorDialog('Backup failed', e.toString());
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final wordlistProvider = context.read<WordlistProvider>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Restore from file?'),
+        content: const Text(
+          'This will replace all wordlists, tests and results on this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Replace'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Choose backup file',
+        type: FileType.any,
+        withData: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      await _showErrorDialog('Restore failed', e.toString());
+      return;
+    }
+
+    if (!mounted) return;
+    if (result == null || result.files.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Restore cancelled.')),
+      );
+      return;
+    }
+
+    final Uint8List? bytes = result.files.single.bytes;
+    if (bytes == null) {
+      await _showErrorDialog('Restore failed',
+          'Could not read file contents. Your existing data was not changed.');
+      return;
+    }
+
+    try {
+      final summary = await BackupService().importFromBytes(bytes);
+      if (!mounted) return;
+      await wordlistProvider.load();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Restored ${summary.wordlists} wordlists, '
+            '${summary.words} words, '
+            '${summary.results} test results.',
+          ),
+        ),
+      );
+    } on BackupFormatException catch (e) {
+      if (!mounted) return;
+      await _showErrorDialog(
+          'Invalid backup file', e.message);
+    } catch (e) {
+      if (!mounted) return;
+      await _showErrorDialog('Restore failed',
+          '$e. Your existing data was not changed.');
+    }
+  }
+
+  Future<void> _showErrorDialog(String title, String message) {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
           ),
         ],
       ),
