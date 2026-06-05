@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'tap_button.dart';
+
 class PinInput extends StatefulWidget {
   final String title;
   final String? subtitle;
@@ -169,25 +171,25 @@ class _PinInputState extends State<PinInput>
                   if (key.isEmpty) {
                     return const SizedBox(width: 80, height: 60);
                   }
+                  final scheme = Theme.of(context).colorScheme;
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: SizedBox(
+                    child: TapButton(
                       width: 80,
                       height: 60,
-                      child: FilledButton.tonal(
-                        onPressed: () => _onKeyPressed(key),
-                        style: FilledButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: key == 'backspace'
-                            ? const Icon(Icons.backspace_outlined)
-                            : Text(
-                                key,
-                                style: const TextStyle(fontSize: 24),
+                      color: scheme.secondaryContainer,
+                      pressedColor: scheme.inversePrimary,
+                      onPressed: () => _onKeyPressed(key),
+                      child: key == 'backspace'
+                          ? Icon(Icons.backspace_outlined,
+                              color: scheme.onSecondaryContainer)
+                          : Text(
+                              key,
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: scheme.onSecondaryContainer,
                               ),
-                      ),
+                            ),
                     ),
                   );
                 }).toList(),

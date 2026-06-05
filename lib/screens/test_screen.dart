@@ -33,6 +33,12 @@ class _TestScreenState extends State<TestScreen> {
   bool _showCorrection = false;
   bool _isSpeaking = false;
   String? _firstAttemptText;
+  // Locks input between accepting a correct answer and advancing to the next
+  // word, so a second tap during the 800ms feedback window can't re-submit.
+  bool _advancing = false;
+  // Ensures the session is saved exactly once, even if the finish path is
+  // somehow triggered twice (double-tap on "Finish", re-entrant advance).
+  bool _finishing = false;
 
   final List<TestResult> _results = [];
 
@@ -105,19 +111,19 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   void _onKeyPressed(String letter) {
-    if (_showCorrection) return;
+    if (_showCorrection || _advancing) return;
     setState(() => _typedText += letter);
   }
 
   void _onBackspace() {
-    if (_showCorrection) return;
+    if (_showCorrection || _advancing) return;
     if (_typedText.isNotEmpty) {
       setState(() => _typedText = _typedText.substring(0, _typedText.length - 1));
     }
   }
 
   void _onSubmit() {
-    if (_typedText.isEmpty || _showCorrection) return;
+    if (_typedText.isEmpty || _showCorrection || _advancing) return;
 
     final correctWord = _words[_currentIndex];
     final isCorrect =
@@ -135,6 +141,7 @@ class _TestScreenState extends State<TestScreen> {
       ));
       _playSound('correct.mp3');
       setState(() {
+        _advancing = true;
         _feedback = 'Correct!';
         _feedbackColor = context.read<SettingsProvider>().colorTheme.correctColor;
       });
@@ -183,11 +190,18 @@ class _TestScreenState extends State<TestScreen> {
       _feedback = null;
       _feedbackColor = null;
       _showCorrection = false;
+      _advancing = false;
     });
     _speakCurrentWord();
   }
 
   Future<void> _finishTest() async {
+    // Guard against the finish path firing twice (e.g. a double-tap on the
+    // correction "Finish" button), which would save the session — and so the
+    // history entry — more than once.
+    if (_finishing) return;
+    _finishing = true;
+
     // Play the finish sound and save concurrently, then wait for both
     // so the sound isn't cut off when we navigate away and dispose().
     final soundFuture = _playSound('finish.mp3')

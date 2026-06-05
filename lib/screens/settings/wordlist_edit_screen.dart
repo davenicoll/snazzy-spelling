@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/wordlist_provider.dart';
+import '../../widgets/tap_button.dart';
 
 class WordlistEditScreen extends StatefulWidget {
   final int wordlistId;
@@ -138,9 +139,22 @@ class _WordlistEditScreenState extends State<WordlistEditScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                FilledButton(
+                TapButton(
+                  height: 52,
+                  color: Theme.of(context).colorScheme.primary,
+                  pressedColor:
+                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                   onPressed: _addWord,
-                  child: const Text('Add'),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Add',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
