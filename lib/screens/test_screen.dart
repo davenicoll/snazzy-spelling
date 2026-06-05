@@ -10,6 +10,7 @@ import '../providers/wordlist_provider.dart';
 import '../providers/test_provider.dart';
 import '../utils/sfx_player.dart';
 import '../widgets/qwerty_keyboard.dart';
+import '../widgets/tap_button.dart';
 
 class TestScreen extends StatefulWidget {
   final int wordlistId;
@@ -328,17 +329,20 @@ class _TestScreenState extends State<TestScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Replay button
-        IconButton.filledTonal(
-          onPressed: _isSpeaking
-              ? null
-              : () {
-                  if (_currentIndex < _words.length) {
-                    _tts.speak(_words[_currentIndex]);
-                  }
-                },
-          icon: const Icon(Icons.volume_up),
-          iconSize: 32,
-          tooltip: 'Listen again',
+        Tooltip(
+          message: 'Listen again',
+          child: TapIconButton(
+            icon: Icons.volume_up,
+            iconSize: 32,
+            semanticLabel: 'Listen again',
+            onPressed: _isSpeaking
+                ? null
+                : () {
+                    if (_currentIndex < _words.length) {
+                      _tts.speak(_words[_currentIndex]);
+                    }
+                  },
+          ),
         ),
         const SizedBox(height: 16),
         // Typed text display

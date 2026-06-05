@@ -7,6 +7,7 @@ import '../models/wordlist.dart';
 import '../providers/settings_provider.dart';
 import '../providers/wordlist_provider.dart';
 import '../utils/sfx_player.dart';
+import '../widgets/tap_button.dart';
 import '../widgets/word_card.dart';
 
 class FlashcardScreen extends StatefulWidget {
@@ -153,15 +154,16 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             top: 0,
             bottom: 0,
             child: Center(
-              child: IconButton.filledTonal(
+              child: TapIconButton(
+                icon: Icons.chevron_left,
+                iconSize: 32,
+                semanticLabel: 'Previous word',
                 onPressed: _currentIndex > 0
                     ? () => _pageController.previousPage(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                         )
                     : null,
-                icon: const Icon(Icons.chevron_left),
-                iconSize: 32,
               ),
             ),
           ),
@@ -170,15 +172,16 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             top: 0,
             bottom: 0,
             child: Center(
-              child: IconButton.filledTonal(
+              child: TapIconButton(
+                icon: Icons.chevron_right,
+                iconSize: 32,
+                semanticLabel: 'Next word',
                 onPressed: _currentIndex < words.length - 1
                     ? () => _pageController.nextPage(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                         )
                     : null,
-                icon: const Icon(Icons.chevron_right),
-                iconSize: 32,
               ),
             ),
           ),

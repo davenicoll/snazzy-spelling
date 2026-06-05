@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'tap_button.dart';
+
 class WordCard extends StatelessWidget {
   final String word;
   final VoidCallback? onSpeak;
@@ -55,11 +57,14 @@ class WordCard extends StatelessWidget {
           if (onSpeak != null)
             Align(
               alignment: Alignment.topCenter,
-              child: IconButton.filledTonal(
-                onPressed: isSpeaking ? null : onSpeak,
-                icon: const Icon(Icons.volume_up),
-                iconSize: 32,
-                tooltip: 'Listen',
+              child: Tooltip(
+                message: 'Listen',
+                child: TapIconButton(
+                  icon: Icons.volume_up,
+                  iconSize: 32,
+                  semanticLabel: 'Listen',
+                  onPressed: isSpeaking ? null : onSpeak,
+                ),
               ),
             ),
         ],
