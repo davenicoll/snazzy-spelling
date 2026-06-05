@@ -377,20 +377,17 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildLives() {
-    final scheme = Theme.of(context).colorScheme;
     final remaining = _maxMistakes - _mistakes;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_maxMistakes, (i) {
+        // Hearts are lost from the right: a used life shows a skull.
         final alive = i < remaining;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Icon(
-            alive ? Icons.favorite : Icons.favorite_border,
-            color: alive
-                ? scheme.primary
-                : scheme.onSurface.withValues(alpha: 0.3),
-            size: 28,
+          child: Text(
+            alive ? '❤️' : '💀',
+            style: const TextStyle(fontSize: 28),
           ),
         );
       }),
