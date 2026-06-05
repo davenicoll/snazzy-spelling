@@ -25,11 +25,17 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen>
+    with SingleTickerProviderStateMixin {
   static const _maxMistakes = 3;
+  static const _heartColor = Color(0xFFE53935);
 
   final FlutterTts _tts = FlutterTts();
   final SfxPlayer _sfx = SfxPlayer();
+
+  // Drives the 3-quick-blinks of the skulls when the last life is lost.
+  late final AnimationController _blinkController;
+  bool _blinkingSkulls = false;
 
   Wordlist? _wordlist;
   List<String> _words = [];
@@ -51,6 +57,10 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    _blinkController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
     _init();
   }
 
@@ -142,7 +152,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _onKeyPressed(String letter) {
-    if (_completed || _failed) return;
+    if (_completed || _failed || _blinkingSkulls) return;
 
     final expected = _target[_progress];
     if (letter.toLowerCase() == expected.toLowerCase()) {
@@ -161,9 +171,19 @@ class _GameScreenState extends State<GameScreen> {
       _playSound('wrong.mp3');
       setState(() => _mistakes++);
       if (_mistakes >= _maxMistakes) {
-        _failWord();
+        _startFailSequence();
       }
     }
+  }
+
+  /// Out of lives: blink the three skulls 3× quickly, then reveal the answer.
+  void _startFailSequence() {
+    setState(() => _blinkingSkulls = true);
+    _blinkController.forward(from: 0).whenComplete(() {
+      if (!mounted) return;
+      setState(() => _blinkingSkulls = false);
+      _failWord();
+    });
   }
 
   void _failWord() {
@@ -190,6 +210,7 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
+    _blinkController.dispose();
     _tts.stop();
     _sfx.dispose();
     super.dispose();
@@ -377,20 +398,31 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildLives() {
-    final remaining = _maxMistakes - _mistakes;
-    return Row(
+    final row = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_maxMistakes, (i) {
-        // Hearts are lost from the right: a used life shows a skull.
-        final alive = i < remaining;
+        // Lives are lost left-to-right: each used life shows a skull.
+        final lost = i < _mistakes;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            alive ? '❤️' : '💀',
-            style: const TextStyle(fontSize: 28),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 3),
+          child: lost
+              ? const Text('💀', style: TextStyle(fontSize: 20))
+              : const Icon(Icons.favorite, color: _heartColor, size: 20),
         );
       }),
+    );
+
+    if (!_blinkingSkulls) return row;
+
+    // Three quick blinks across the controller's 400ms.
+    return AnimatedBuilder(
+      animation: _blinkController,
+      builder: (context, child) {
+        final opacity =
+            0.15 + 0.85 * (0.5 + 0.5 * cos(_blinkController.value * 2 * pi * 3));
+        return Opacity(opacity: opacity, child: child);
+      },
+      child: row,
     );
   }
 
