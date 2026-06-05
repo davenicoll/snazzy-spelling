@@ -10,6 +10,7 @@ import 'screens/pin_entry_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/wordlist_view_screen.dart';
 import 'screens/flashcard_screen.dart';
+import 'screens/game_screen.dart';
 import 'screens/test_screen.dart';
 import 'screens/test_summary_screen.dart';
 import 'screens/results_history_screen.dart';
@@ -129,6 +130,11 @@ class SnazzySpellingApp extends StatelessWidget {
         final id = settings.arguments as int;
         return MaterialPageRoute(
           builder: (_) => FlashcardScreen(wordlistId: id),
+        );
+      case '/wordlist/game':
+        final id = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => GameScreen(wordlistId: id),
         );
       case '/wordlist/test':
         final id = settings.arguments as int;

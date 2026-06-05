@@ -87,6 +87,18 @@ class _WordlistViewScreenState extends State<WordlistViewScreen> {
                     ),
                     const SizedBox(height: 16),
                     _OptionCard(
+                      icon: Icons.sports_esports_outlined,
+                      title: 'Spelling Game',
+                      subtitle: 'Spell the word, letter by letter',
+                      onTap: () {
+                        Navigator.of(context).pushNamed(
+                          '/wordlist/game',
+                          arguments: widget.wordlistId,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _OptionCard(
                       icon: Icons.quiz_outlined,
                       title: 'Test',
                       subtitle: 'Listen and spell each word',

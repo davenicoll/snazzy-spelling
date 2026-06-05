@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 
 class QwertyKeyboard extends StatelessWidget {
   final ValueChanged<String> onKeyPressed;
-  final VoidCallback onBackspace;
-  final VoidCallback onSubmit;
+
+  /// Backspace handler. Pass null to hide the Delete key (e.g. game mode, where
+  /// correct letters lock in and wrong ones are ignored — nothing to delete).
+  final VoidCallback? onBackspace;
+
+  /// Submit handler. Pass null to hide the Check key (e.g. game mode, where the
+  /// word auto-completes as the final correct letter is typed).
+  final VoidCallback? onSubmit;
 
   const QwertyKeyboard({
     super.key,
     required this.onKeyPressed,
-    required this.onBackspace,
-    required this.onSubmit,
+    this.onBackspace,
+    this.onSubmit,
   });
 
   static const _rows = [
@@ -20,12 +26,15 @@ class QwertyKeyboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasActions = onBackspace != null || onSubmit != null;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final effectiveWidth = constraints.maxWidth.clamp(0.0, 900.0);
 
-        final actionKeyWidth = (effectiveWidth * 0.16).clamp(60.0, 120.0);
-        final gap = (effectiveWidth * 0.015).clamp(8.0, 14.0);
+        final actionKeyWidth =
+            hasActions ? (effectiveWidth * 0.16).clamp(60.0, 120.0) : 0.0;
+        final gap = hasActions ? (effectiveWidth * 0.015).clamp(8.0, 14.0) : 0.0;
 
         final letterAreaWidth = effectiveWidth - actionKeyWidth - gap;
 
@@ -66,31 +75,35 @@ class QwertyKeyboard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: gap),
-                // Action keys: Delete aligned with top row, Check with bottom
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: rowGap),
-                      child: _ActionKey(
-                        label: 'Delete',
-                        width: actionKeyWidth,
-                        height: keyHeight,
-                        onPressed: onBackspace,
-                      ),
-                    ),
-                    SizedBox(height: keyHeight + rowGap * 2),
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: rowGap),
-                      child: _CheckKey(
-                        width: actionKeyWidth,
-                        height: keyHeight,
-                        onPressed: onSubmit,
-                      ),
-                    ),
-                  ],
-                ),
+                if (hasActions) ...[
+                  SizedBox(width: gap),
+                  // Action keys: Delete aligned with top row, Check with bottom
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onBackspace != null)
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: rowGap),
+                          child: _ActionKey(
+                            label: 'Delete',
+                            width: actionKeyWidth,
+                            height: keyHeight,
+                            onPressed: onBackspace!,
+                          ),
+                        ),
+                      SizedBox(height: keyHeight + rowGap * 2),
+                      if (onSubmit != null)
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: rowGap),
+                          child: _CheckKey(
+                            width: actionKeyWidth,
+                            height: keyHeight,
+                            onPressed: onSubmit!,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
