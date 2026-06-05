@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
@@ -36,6 +37,10 @@ class _GameScreenState extends State<GameScreen>
   // Drives the 3-quick-blinks of the skulls when the last life is lost.
   late final AnimationController _blinkController;
   bool _blinkingSkulls = false;
+
+  static const Duration _confettiDuration = Duration(seconds: 5);
+  final ConfettiController _confettiController =
+      ConfettiController(duration: _confettiDuration);
 
   Wordlist? _wordlist;
   List<String> _words = [];
@@ -202,6 +207,11 @@ class _GameScreenState extends State<GameScreen>
       setState(() => _finished = true);
       _tts.stop();
       _playSound('finish.mp3');
+      // Reaching the end always celebrates, regardless of score.
+      _confettiController.play();
+      Future.delayed(_confettiDuration, () {
+        if (mounted) _confettiController.stop();
+      });
       return;
     }
     setState(() => _currentIndex++);
@@ -211,6 +221,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     _blinkController.dispose();
+    _confettiController.dispose();
     _tts.stop();
     _sfx.dispose();
     super.dispose();
@@ -432,40 +443,61 @@ class _GameScreenState extends State<GameScreen>
         title: Text('Game: ${_wordlist!.name}'),
         automaticallyImplyLeading: false,
       ),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('🎉', style: TextStyle(fontSize: 64)),
-                const SizedBox(height: 16),
-                Text(
-                  'Great spelling!',
-                  style: Theme.of(context).textTheme.headlineSmall,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🎉', style: TextStyle(fontSize: 64)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Great spelling!',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'You spelled $_correctWords of ${_words.length} '
+                      'word${_words.length == 1 ? '' : 's'} correctly.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    FilledButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Done'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'You spelled $_correctWords of ${_words.length} '
-                  'word${_words.length == 1 ? '' : 's'} correctly.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7),
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Done'),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          // Non-blocking confetti raining from the top.
+          Align(
+            alignment: Alignment.topCenter,
+            child: IgnorePointer(
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirection: pi / 2, // straight down
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.05,
+                numberOfParticles: 12,
+                maxBlastForce: 20,
+                minBlastForce: 8,
+                gravity: 0.25,
+                shouldLoop: false,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

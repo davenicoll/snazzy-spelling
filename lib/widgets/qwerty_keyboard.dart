@@ -28,6 +28,8 @@ class QwertyKeyboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasActions = onBackspace != null || onSubmit != null;
 
+    final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final effectiveWidth = constraints.maxWidth.clamp(0.0, 900.0);
@@ -41,7 +43,20 @@ class QwertyKeyboard extends StatelessWidget {
         final keyGap = (letterAreaWidth * 0.008).clamp(2.0, 5.0);
         final totalGaps = 10 * 2 * keyGap;
         final keyWidth = ((letterAreaWidth - totalGaps) / 10).clamp(24.0, 64.0);
-        final keyHeight = (keyWidth * 1.15).clamp(36.0, 60.0);
+
+        // On phones the keys grow vertically to fill the band the parent gives
+        // us (the three rows are otherwise a thin strip of tiny keys). Tablets
+        // keep their existing square-ish proportions, so their layout is
+        // unchanged.
+        final double keyHeight;
+        if (isPhone && constraints.maxHeight.isFinite) {
+          keyHeight = (constraints.maxHeight / 3.5)
+              .clamp(keyWidth * 1.15, keyWidth * 1.9)
+              .clamp(40.0, 76.0)
+              .toDouble();
+        } else {
+          keyHeight = (keyWidth * 1.15).clamp(36.0, 60.0).toDouble();
+        }
         final rowGap = (keyHeight * 0.08).clamp(2.0, 5.0);
 
         return Center(

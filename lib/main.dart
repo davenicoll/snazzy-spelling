@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'models/color_theme.dart';
@@ -178,6 +179,20 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   void initState() {
     super.initState();
     _init();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Phones get locked to portrait — the spelling keyboard and large word
+    // display don't fit a phone's landscape height. Tablets (shortestSide >=
+    // 600) keep every orientation so the tablet layout is unaffected.
+    final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+    SystemChrome.setPreferredOrientations(
+      isPhone
+          ? const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]
+          : DeviceOrientation.values,
+    );
   }
 
   Future<void> _init() async {

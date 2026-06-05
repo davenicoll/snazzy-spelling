@@ -45,12 +45,13 @@ class _WordlistViewScreenState extends State<WordlistViewScreen> {
       appBar: AppBar(
         title: Text(_wordlist!.name),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Consumer2<WordlistProvider, SettingsProvider>(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Consumer2<WordlistProvider, SettingsProvider>(
               builder: (context, provider, settings, _) {
                 final viewed = provider.viewedWords(widget.wordlistId);
                 final gated = _wordlist!.isTestGated(
@@ -62,6 +63,7 @@ class _WordlistViewScreenState extends State<WordlistViewScreen> {
                     .length;
 
                 return Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -134,6 +136,7 @@ class _WordlistViewScreenState extends State<WordlistViewScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
